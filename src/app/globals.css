@@ -23,3 +23,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+button,
+input,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}

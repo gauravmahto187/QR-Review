@@ -7,7 +7,7 @@ export default function Home() {
           Foundation ready
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          The Phase 1 application shell is running. Product features will be
+          The application foundation is running. Product features will be
           added in later approved phases.
         </p>
         <div className="mt-6 flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">

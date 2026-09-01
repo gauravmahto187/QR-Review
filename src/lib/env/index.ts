@@ -1,1 +1,1 @@
-export { serverEnv } from "./server";
+export { getSupabaseSecretConfig, serverEnv } from "./server";

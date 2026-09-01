@@ -1,0 +1,1 @@
+-- Intentionally empty in Phase 2. Admin users and product data are not seeded.

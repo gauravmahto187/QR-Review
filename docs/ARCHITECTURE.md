@@ -1,13 +1,11 @@
 # Architecture
 
-## Target stack
+## Stack
 
 - Next.js App Router, TypeScript, and Tailwind CSS
 - Supabase PostgreSQL, Auth, Storage, RLS, and versioned migrations
-- Vercel for the Next.js application
+- Vercel as the later Next.js deployment target
 - Provider-independent AI adapters
-
-Supabase and Vercel are architectural targets only and are not connected in Phase 1.
 
 ## Application boundaries
 
@@ -20,40 +18,60 @@ Routes and UI
 ```
 
 - `src/app` owns routes, layouts, and route handlers.
-- `src/components/ui` will contain reusable interface primitives.
-- `src/features` will group product-specific UI, schemas, actions, and queries.
-- `src/lib` contains focused infrastructure helpers such as environment validation.
+- `src/components/ui` contains reusable interface primitives.
+- `src/features` groups product-specific code.
+- `src/lib/supabase` owns browser, SSR, proxy, and privileged clients.
+- `src/lib/auth` owns identity and admin-authorization helpers.
 - `src/server/services` owns business workflows.
 - `src/server/repositories` owns persistence access.
-- `src/types` contains shared domain types where feature-local types are unsuitable.
+- `src/types/database.ts` mirrors the migration schema until types can be regenerated from an applied database.
 
-Business logic must not live in presentation components. Client Components should be limited to interactions that require browser state.
+Business logic must not live in presentation components. Client Components are limited to browser interactions.
+
+## Supabase clients and keys
+
+The browser and authenticated SSR clients use `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. The publishable key is expected to be visible and relies on RLS for data protection.
+
+The privileged server client uses `SUPABASE_SECRET_KEY`, disables browser-style session persistence, imports `server-only`, and must be called only after application-level authorization. The secret key bypasses RLS and must never enter browser code, logs, URLs, or public documentation.
+
+The root Next.js proxy refreshes Supabase Auth cookies via `getClaims()`. It becomes a no-op when Supabase public configuration is absent, preserving local foundation development.
+
+## Authentication and authorization
+
+Only admins authenticate. Supabase Auth establishes identity; an `admin_profiles` row with role `ADMIN` establishes application authorization. `getAdminAuthState()` distinguishes an anonymous request from an authenticated non-admin, `getCurrentAdmin()` resolves the profile, and `requireAdmin()` protects server-rendered admin features.
+
+`/login` uses a server action to validate email/password input and call Supabase Auth. Successful authentication is followed immediately by an `admin_profiles` authorization query. Non-admin sessions are signed out and denied. Existing authorized sessions redirect directly to `/admin`.
+
+The `/admin` layout performs identity and profile checks on the server for every nested admin route. Anonymous requests redirect to `/login`; authenticated users without an admin profile redirect to an unauthorized state on the login page. Logout invalidates the Supabase session, refreshes the route tree, and returns to `/login`.
+
+The initial profile is provisioned by an idempotent version-controlled Node script. It uses the server-only secret key, verifies that the supplied Auth user exists, and upserts only the matching `ADMIN` profile. It contains no password or API key.
+
+## Admin interface
+
+The admin shell is designed for 360–430px first. Mobile uses a fixed, safe-area-aware bottom navigation with Home, Businesses, Reviews, and More. Tablet and desktop progressively switch to a left sidebar while retaining the same information architecture. Businesses and Reviews remain protected placeholders until their respective phases.
+
+## RLS strategy
+
+RLS is enabled on every application table. `anon` receives no application-table privileges or policies. Authenticated users can access rows only when the security-definer `is_admin()` function confirms a matching admin profile. Public review operations will later use narrow server-side handlers rather than broad anonymous table policies.
+
+The secret-key client bypasses RLS, so application authorization remains mandatory before privileged operations. RLS is defense in depth, not a replacement for server authorization.
+
+## Storage strategy
+
+`supabase/config.toml` defines the public `business-logos` bucket with a 2 MiB limit and PNG, JPEG, and WebP MIME allowlist. Storage object policies permit authenticated admins to manage only that bucket. Anonymous writes and listings are not allowed; public object URLs provide simple logo delivery.
+
+Supabase Storage internals are not mutated directly in SQL. The bucket must be seeded locally or created with matching settings in the hosted project.
 
 ## Public flow
 
-The main customer route is `/r/[slug]`. The server resolves the slug, checks business status and the effective subscription, and returns either the review experience or a friendly unavailable state. The interactive question and review steps remain within this route.
+The later customer route is `/r/[slug]`. Server logic will resolve the business, verify status and the one current subscription, then return either the review experience or an unavailable state. Public operations will not trust client-submitted business identifiers.
 
-The handoff is: generate review → optionally edit or regenerate → copy to clipboard → record `GOOGLE_REVIEW_CLICK` → open the configured Google Review URL. Clipboard failure must offer a manual-copy fallback without blocking navigation.
+## AI and analytics boundaries
 
-## Admin flow
+Feature code will call `generateReview()` through mock, Gemini, or OpenAI adapters. Keys remain server-only. One initial generation and one regeneration are enforced server-side and in database constraints.
 
-Supabase Auth will authenticate the central admin. Every privileged read and mutation will also authorize the admin server-side. Future admin pages will use mobile cards, bottom navigation, touch-friendly forms, drawers, and sticky actions, with desktop as progressive enhancement.
+Analytics is append-oriented and limited to approved event types. A Google click never represents a confirmed review submission.
 
-## AI boundary
+## Time and performance
 
-Feature code will call one `generateReview()` application service. Provider adapters will implement a shared contract for mock, Gemini, and OpenAI. API keys remain server-only. The server enforces one initial generation and one regeneration per review session.
-
-## Security and performance
-
-- Store secrets only in server environment variables.
-- Validate external input at server boundaries.
-- Use Supabase RLS as defense in depth; privileged operations stay server-side.
-- Never trust client-submitted business identifiers without resolving ownership/context.
-- Rate-limit public generation and abuse-sensitive endpoints.
-- Render public QR pages server-side where beneficial and keep client JavaScript small.
-- Do not use caching that can leave subscription changes stale.
-
-## Phase 1 endpoints
-
-- `/` is a temporary product-specific readiness page.
-- `GET /api/health` returns `{ "status": "ok" }` without Supabase or AI dependencies.
+PostgreSQL stores `timestamptz` values in UTC. Subscription dates will later display in `Asia/Kathmandu`. Public QR routes have the highest performance priority, and caching must not leave subscription status stale.
