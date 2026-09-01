@@ -1,6 +1,6 @@
 # Database
 
-The V1 schema is versioned in `supabase/migrations`. It has not been pushed to a hosted project.
+The V1 schema is versioned in `supabase/migrations` and applied to the configured hosted Supabase project.
 
 ## Entities
 
@@ -48,6 +48,10 @@ Indexes support slug lookup, current/expiring subscriptions, ordered questions/o
 ## Security
 
 All application tables have RLS enabled. Anonymous database access is revoked. Authenticated table access requires `is_admin()`. Server-controlled public operations will use the privileged client only after validation, rate limiting, and business/subscription checks.
+
+## Business lifecycle and audit
+
+Business slugs have a database unique constraint and are treated as immutable after creation by the application. `ARCHIVED` rows require `archived_at`; active and suspended rows require it to be null. The admin application exposes no physical delete operation. Business management records `BUSINESS_CREATED`, `BUSINESS_UPDATED`, `GOOGLE_REVIEW_URL_CHANGED`, `BUSINESS_LOGO_CHANGED`, `BUSINESS_SUSPENDED`, `BUSINESS_REACTIVATED`, and `BUSINESS_ARCHIVED` events in `audit_logs`.
 
 ## TypeScript types
 

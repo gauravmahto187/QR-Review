@@ -12,8 +12,8 @@ This is the V1 decision log. Changes should be recorded here before architecture
 6. Trial architecture supports a default seven-day trial that may later be configured or skipped.
 7. Renewal durations are 1, 3, 6, or 12 months, plus custom expiry.
 8. Timestamps represent UTC instants. Relevant dates display in `Asia/Kathmandu`.
-9. Slugs become permanent after activation or QR use and do not follow display-name changes.
-10. Reserved slugs are `admin`, `login`, `api`, `auth`, `dashboard`, `settings`, and `r`; application validation will enforce them later.
+9. Slugs become permanent immediately after business creation and do not follow display-name changes.
+10. Reserved slugs are `admin`, `login`, `api`, `auth`, `dashboard`, `settings`, and `r`; application validation enforces them before creation.
 11. The V1 public customer flow lives at `/r/[slug]`.
 12. Businesses start with three questions, may have at most five, and each question may have at most six options. Maximum counts are application rules for a later phase.
 13. V1 stores selected answers as JSONB with stable question and option IDs rather than a `review_answers` table.
@@ -32,7 +32,7 @@ This is the V1 decision log. Changes should be recorded here before architecture
 23. Supabase Auth establishes identity; `admin_profiles` establishes application authorization. No customer authentication is added.
 24. Every application table has conservative RLS. Anonymous clients have no direct application-table access.
 25. Public review operations will later be narrow server handlers, not broad anonymous policies.
-26. The `business-logos` Storage bucket is public for delivery but denies anonymous write/list access. It allows PNG, JPEG, and WebP up to 2 MiB.
+26. The `business-logos` Storage bucket is public for delivery but denies anonymous write/list access. It allows PNG, JPEG, WebP, HEIC, and HEIF up to 2 MiB; unsupported browser previews fall back gracefully.
 27. Storage bucket configuration belongs in `supabase/config.toml`; object policies belong in migrations. Hosted bucket creation is a reviewed manual/project setup action.
 28. Migrations remain local and version-controlled until a Supabase project is explicitly created, linked, reviewed, and approved for push.
 29. AI defaults to `mock`; Supabase and AI credentials are not required for the homepage or health endpoint.
@@ -42,4 +42,7 @@ This is the V1 decision log. Changes should be recorded here before architecture
 33. Authenticated non-admin users are denied, signed out after an attempted login, and cannot rely on client-side navigation to bypass protection.
 34. The initial existing Auth user is provisioned through an idempotent secret-key script that verifies the Auth user before upserting `admin_profiles`. No password or secret is committed.
 35. The mobile admin shell uses Home, Businesses, Reviews, and More bottom navigation; desktop progressively enhances this to a sidebar.
-36. Home is functional in Phase 3. Businesses and Reviews are protected placeholders, and More contains account/logout controls. No production analytics are fabricated.
+36. Home is functional. Reviews remains a protected placeholder, and More contains account/logout controls. No production analytics are fabricated.
+37. Business management is mobile-first and uses cards rather than desktop tables. It includes server-side search/filter reads, create/edit/detail routes, secure logo management, and confirmed lifecycle actions.
+38. Business archiving is a terminal soft-delete state in the admin application. There is no hard-delete action and archived businesses are retained for history.
+39. All business reads use the authenticated RLS client. Every mutation requires server-side admin authorization and writes the applicable audit event.

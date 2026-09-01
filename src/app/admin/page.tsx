@@ -9,7 +9,7 @@ export const metadata = {
 
 const setupCards = [
   {
-    description: "Create and manage business profiles in the next approved phase.",
+    description: "Create, search, edit, suspend, and archive business profiles.",
     href: "/admin/businesses",
     icon: Building2,
     label: "Businesses",
@@ -61,7 +61,7 @@ export default async function AdminHomePage() {
               Workspace
             </p>
             <h2 className="mt-2 text-xl font-semibold text-slate-950">
-              Coming in later phases
+              Workspace tools
             </h2>
           </div>
         </div>

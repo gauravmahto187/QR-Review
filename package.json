@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "provision:initial-admin": "node --env-file=.env.local scripts/provision-initial-admin.mjs"
+    "provision:initial-admin": "node --env-file=.env.local scripts/provision-initial-admin.mjs",
+    "configure:business-logo-bucket": "node --env-file=.env.local scripts/configure-business-logo-bucket.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

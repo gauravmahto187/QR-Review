@@ -33,11 +33,13 @@ There are no business-admin or customer accounts in V1.
 - Central-admin email/password login, logout, and server-protected `/admin` routes.
 - An idempotent secret-key provisioning script for the initial existing Auth user.
 - Mobile-first admin shell with Home, Businesses, Reviews, and More navigation.
-- Public business-logo bucket configuration for PNG, JPEG, and WebP up to 2 MiB.
+- Mobile-first business list, search/status filters, create/edit/detail flows, and lifecycle actions.
+- Permanent, reserved-word-protected business slugs and server-validated Google Review URLs.
+- Public business-logo bucket configuration for PNG, JPEG, WebP, HEIC, and HEIF up to 2 MiB, with admin-only writes.
 - `GET /api/health`, independent of Supabase and AI.
 
 ## V1 exclusions
 
 No payment gateway, recurring billing, business-specific admin accounts, customer accounts, social links, marketing automation, advanced CRM, direct Google review posting, or unsupported Google manipulation is in scope.
 
-Business CRUD, subscription UI, customer review UI, QR generation, AI providers, analytics UI, Google handoff, and deployment are not implemented yet.
+Subscription UI, customer review UI, QR generation, AI providers, analytics UI, Google handoff, and deployment are not implemented yet. Business management intentionally uses archive rather than hard deletion.

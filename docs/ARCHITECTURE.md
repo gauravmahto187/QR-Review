@@ -48,7 +48,15 @@ The initial profile is provisioned by an idempotent version-controlled Node scri
 
 ## Admin interface
 
-The admin shell is designed for 360–430px first. Mobile uses a fixed, safe-area-aware bottom navigation with Home, Businesses, Reviews, and More. Tablet and desktop progressively switch to a left sidebar while retaining the same information architecture. Businesses and Reviews remain protected placeholders until their respective phases.
+The admin shell is designed for 360–430px first. Mobile uses a fixed, safe-area-aware bottom navigation with Home, Businesses, Reviews, and More. Tablet and desktop progressively switch to a left sidebar while retaining the same information architecture. Businesses provides mobile-first management; Reviews remains a protected placeholder.
+
+## Business management
+
+`/admin/businesses` renders a server-loaded, RLS-protected card list with name search and status filtering. Create, edit, detail, and lifecycle routes live under the same protected admin layout. Client Components are limited to form interaction, image preview, and confirmation dialogs; all reads use the authenticated SSR client and every mutation calls `requireAdmin()` before using that client.
+
+Business slugs are normalized and validated before creation, including reserved names and uniqueness. Edit operations load the stored slug and never accept a replacement from the browser. Business lifecycle transitions are restricted to active → suspended/archived and suspended → active/archived. Archived is terminal in the admin application, and no hard-delete action exists.
+
+Business mutations write corresponding audit events for creation, profile updates, Google URL changes, logo changes, suspension, reactivation, and archive.
 
 ## RLS strategy
 
@@ -58,7 +66,7 @@ The secret-key client bypasses RLS, so application authorization remains mandato
 
 ## Storage strategy
 
-`supabase/config.toml` defines the public `business-logos` bucket with a 2 MiB limit and PNG, JPEG, and WebP MIME allowlist. Storage object policies permit authenticated admins to manage only that bucket. Anonymous writes and listings are not allowed; public object URLs provide simple logo delivery.
+`supabase/config.toml` defines the public `business-logos` bucket with a 2 MiB limit and PNG, JPEG, WebP, HEIC, and HEIF MIME allowlist. The versioned bucket configuration script applies matching settings to the hosted project. Storage object policies permit authenticated admins to manage only that bucket. Anonymous writes and listings are not allowed; public object URLs provide simple logo delivery.
 
 Supabase Storage internals are not mutated directly in SQL. The bucket must be seeded locally or created with matching settings in the hosted project.
 
