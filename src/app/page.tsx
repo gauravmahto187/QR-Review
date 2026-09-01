@@ -2,7 +2,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md items-center px-5 py-12">
       <section className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">Smart Review QR</p>
+        <p className="text-sm font-semibold text-emerald-700">Boostup AI Smart QR</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
           Foundation ready
         </h1>

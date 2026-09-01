@@ -6,17 +6,21 @@ import { BUSINESS_STATUSES } from "@/features/businesses/constants";
 import { listBusinesses } from "@/features/businesses/queries";
 import { getBusinessLogoUrl } from "@/features/businesses/storage";
 import { BusinessStatusBadge } from "@/features/businesses/status-badge";
+import { SubscriptionStatusBadge } from "@/features/subscriptions/subscription-status-badge";
+import { getExpiringLabel, getSubscriptionTiming } from "@/features/subscriptions/utils";
+import { requireAdminPage } from "@/lib/auth/admin";
 import type { Database } from "@/types/database";
 
-export const metadata = { title: "Businesses | Smart Review QR" };
+export const metadata = { title: "Businesses | Boostup AI Smart QR" };
 
 type BusinessStatus = Database["public"]["Enums"]["business_status"];
 
 export default async function BusinessesPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+  await requireAdminPage();
   const params = await searchParams;
   const search = params.q?.trim() ?? "";
   const status = BUSINESS_STATUSES.includes(params.status as BusinessStatus) ? (params.status as BusinessStatus) : undefined;
-  const { businesses, supabase } = await listBusinesses({ search, status });
+  const { businesses, subscriptions, supabase } = await listBusinesses({ search, status });
 
   return (
     <div>
@@ -48,17 +52,22 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
 
       {businesses.length ? (
         <section className="mt-5 grid gap-3 sm:grid-cols-2" aria-label="Business list">
-          {businesses.map((business) => (
+          {businesses.map((business) => {
+            const subscription = subscriptions.get(business.id) ?? null;
+            const expiringLabel = getExpiringLabel(getSubscriptionTiming(subscription).expiringWindow);
+            return (
             <Link className="group rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md" href={`/admin/businesses/${business.id}`} key={business.id}>
               <div className="flex items-start gap-3">
                 <BusinessLogo alt={business.name} color={business.primary_color} url={getBusinessLogoUrl(supabase, business.logo_path)} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2"><h2 className="truncate font-semibold text-slate-950 group-hover:text-emerald-800">{business.name}</h2><BusinessStatusBadge status={business.status} /></div>
                   <p className="mt-1 truncate text-sm text-slate-500">/r/{business.slug}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2"><SubscriptionStatusBadge subscription={subscription} />{expiringLabel ? <span className="text-xs font-medium text-amber-700">{expiringLabel}</span> : null}</div>
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </section>
       ) : (
         <section className="mt-5 rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm sm:p-12">

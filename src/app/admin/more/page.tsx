@@ -1,14 +1,14 @@
 import { ShieldCheck } from "lucide-react";
 
 import { LogoutButton } from "@/features/auth/logout-button";
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireAdminPage } from "@/lib/auth/admin";
 
 export const metadata = {
-  title: "More | Smart Review QR",
+  title: "More | Boostup AI Smart QR",
 };
 
 export default async function MorePage() {
-  const admin = await requireAdmin();
+  const admin = await requireAdminPage();
 
   return (
     <div>

@@ -1,7 +1,7 @@
 import { MessageSquareText } from "lucide-react";
 
 export const metadata = {
-  title: "Reviews | Smart Review QR",
+  title: "Reviews | Boostup AI Smart QR",
 };
 
 export default function ReviewsPage() {

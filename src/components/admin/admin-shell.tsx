@@ -38,7 +38,7 @@ export function AdminShell({
             <ShieldCheck className="size-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-slate-950">Smart Review QR</p>
+            <p className="text-sm font-semibold text-slate-950">Boostup AI Smart QR</p>
             <p className="text-xs text-slate-500">Admin workspace</p>
           </div>
         </div>
@@ -86,8 +86,8 @@ export function AdminShell({
                 <ShieldCheck className="size-5" aria-hidden="true" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-slate-950">Smart Review QR</p>
-                <p className="text-xs text-slate-500">Admin</p>
+                <p className="text-sm font-semibold leading-tight text-slate-950">Boostup</p>
+                <p className="text-xs font-medium text-slate-500">AI Smart QR</p>
               </div>
             </div>
             <span

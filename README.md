@@ -1,4 +1,4 @@
-# Smart Review QR
+# Boostup AI Smart QR
 
 Mobile-first Google Review automation SaaS for centrally managed businesses.
 

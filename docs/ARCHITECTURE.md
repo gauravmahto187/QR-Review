@@ -1,4 +1,4 @@
-# Architecture
+# Boostup AI Smart QR — Architecture
 
 ## Stack
 
@@ -58,6 +58,38 @@ Business slugs are normalized and validated before creation, including reserved 
 
 Business mutations write corresponding audit events for creation, profile updates, Google URL changes, logo changes, suspension, reactivation, and archive.
 
+## Subscription lifecycle and availability
+
+`/admin/businesses/[id]/subscription` is the mobile-first subscription workspace. Server Components load the current subscription and append-only history through the authenticated RLS client. Confirmed client interactions submit to a server action that calls `requireAdmin()` and invokes the versioned `apply_subscription_action` database function.
+
+The database function locks the business row to serialize concurrent changes. In one transaction it marks the previous current row non-current, inserts a new current history row, and writes the matching audit event. The partial unique index remains the final guarantee that only one current row exists per business.
+
+Fixed-duration renewal is deterministic. If the current row is an unexpired `TRIAL` or `ACTIVE` subscription, the new expiry extends from its existing `expires_at`; otherwise the period starts from the current UTC instant. The new administrative record starts at the action time while retaining the calculated continuous expiry. Custom dates are interpreted as 23:59:59 in `Asia/Kathmandu` and stored as UTC.
+
+`evaluateBusinessAvailability()` is the authoritative reusable rule boundary. A business is available only when its own status is `ACTIVE`, a current subscription exists, its status is `TRIAL` or `ACTIVE`, and `expires_at` is after the current UTC instant. It returns a sanitized reason: `ACTIVE`, `EXPIRED`, `SUSPENDED`, `CANCELLED`, `NO_SUBSCRIPTION`, `BUSINESS_SUSPENDED`, or `BUSINESS_ARCHIVED`. Public access will call this service later; it never depends on a scheduled expiry job or a stored `EXPIRED` status alone.
+
+## Review-question management
+
+`/admin/businesses/[id]/questions` is the mobile-first question workspace. Server Components load non-archived questions and ordered options through the authenticated RLS client. Client Components handle dialogs, move controls, and the local preview; every mutation passes through Zod-validated server actions and authenticated database functions.
+
+Question and option mutations lock the owning business before changing state. Database functions enforce at most five active questions, at most six options per question, and at least two active options for every active question. Questions are created inactive so options can be configured safely before activation. Archiving is a soft delete using `archived_at` and disables the question.
+
+Ordering uses integer `sort_order`, database uniqueness per parent, and atomic adjacent swaps. Admin input never writes arbitrary sort positions. The recommended template is created atomically only when the business has no non-archived questions, and remains fully editable afterward.
+
+The admin-only mobile preview reads the current active questions/options and simulates stepping through answers in local component state. It does not enforce subscriptions, call AI, create review sessions, or navigate to Google.
+
+## Public customer review flow
+
+`/r/[slug]` is dynamic and subscription-sensitive. Every page request and session mutation resolves the business through a server-only privileged client, calls the shared availability rules, and then loads only active, non-archived questions with at least two active options. Missing, unavailable, and unconfigured businesses receive friendly customer states without subscription or admin details.
+
+Starting creates a two-hour anonymous `review_sessions` row and an HttpOnly, same-site cookie containing only its opaque `anonymous_session_id`. Refresh restores an unexpired session. No customer identity or contact data is requested or stored.
+
+Answers use `{ "question-uuid": "option-uuid" }`. The server accepts one question/option pair at a time, rechecks availability and current active configuration, rejects cross-business or inactive IDs, and caps answers at five. Labels and option values sent by a browser are never trusted.
+
+The final step stores only `en` or `ne` in `generation_language`, validates that every current question has a valid answer, and marks the session complete. Generation then restores that session server-side, re-resolves every question and option label/value from the active database configuration, and never accepts prompt text from the browser.
+
+Valid page visits record best-effort `PAGE_VIEW` events through a deduplicated visitor cookie. A session records at most one `REVIEW_STARTED`. Analytics failures never block the review flow, and no `QUESTION_COMPLETED` event exists.
+
 ## RLS strategy
 
 RLS is enabled on every application table. `anon` receives no application-table privileges or policies. Authenticated users can access rows only when the security-definer `is_admin()` function confirms a matching admin profile. Public review operations will later use narrow server-side handlers rather than broad anonymous table policies.
@@ -76,7 +108,13 @@ The later customer route is `/r/[slug]`. Server logic will resolve the business,
 
 ## AI and analytics boundaries
 
-Feature code will call `generateReview()` through mock, Gemini, or OpenAI adapters. Keys remain server-only. One initial generation and one regeneration are enforced server-side and in database constraints.
+Feature code calls the provider-independent `generateReview()` boundary. `MockProvider` is the key-free development default and produces grounded English or Nepali text through the same contract as `GeminiProvider`. Gemini uses the server-only key, a 15-second timeout, normalized errors, and the cost-efficient `gemini-2.5-flash-lite` model. `OpenAIProvider` remains a non-operational compatibility stub.
+
+Prompt construction is isolated from UI and versioned as `v1`. It receives only the server-resolved business name, question text, selected option label/value, and `en` or `ne`. Output normalization rejects empty, excessively short, or excessive responses before persistence.
+
+The database atomically reserves and finalizes generation numbers under a session row lock. A session can have only one successful initial generation and one successful regeneration. Pending duplicate requests are rejected for 30 seconds, failed retries require a 10-second delay, and each generation number permits at most three provider attempts. This durable per-session protection works across application instances; production hardening should add a shared coarse IP/provider quota before public launch.
+
+Successful and failed attempts are stored in `review_generations` with provider, model, prompt version, input hash, language, attempt count, status, safe error code, and generated text when successful. `REVIEW_GENERATED` and `REVIEW_REGENERATED` are best-effort, unique per session/type, and recorded only after the corresponding successful generation. Analytics failures never discard a generated review.
 
 Analytics is append-oriented and limited to approved event types. A Google click never represents a confirmed review submission.
 

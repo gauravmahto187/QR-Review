@@ -40,6 +40,7 @@ export type Database = {
         Row: {
           business_id: string;
           created_at: string;
+          dedupe_key: string | null;
           event_type: Database["public"]["Enums"]["analytics_event_type"];
           id: string;
           metadata: Json;
@@ -48,6 +49,7 @@ export type Database = {
         Insert: {
           business_id: string;
           created_at?: string;
+          dedupe_key?: string | null;
           event_type: Database["public"]["Enums"]["analytics_event_type"];
           id?: string;
           metadata?: Json;
@@ -56,6 +58,7 @@ export type Database = {
         Update: {
           business_id?: string;
           created_at?: string;
+          dedupe_key?: string | null;
           event_type?: Database["public"]["Enums"]["analytics_event_type"];
           id?: string;
           metadata?: Json;
@@ -140,6 +143,7 @@ export type Database = {
       };
       review_generations: {
         Row: {
+          attempt_count: number;
           business_id: string;
           created_at: string;
           error_code: string | null;
@@ -148,6 +152,7 @@ export type Database = {
           id: string;
           input_hash: string | null;
           language: Database["public"]["Enums"]["generation_language"];
+          last_attempted_at: string;
           model: string | null;
           prompt_version: string;
           provider: string;
@@ -155,6 +160,7 @@ export type Database = {
           status: Database["public"]["Enums"]["review_generation_status"];
         };
         Insert: {
+          attempt_count?: number;
           business_id: string;
           created_at?: string;
           error_code?: string | null;
@@ -163,6 +169,7 @@ export type Database = {
           id?: string;
           input_hash?: string | null;
           language: Database["public"]["Enums"]["generation_language"];
+          last_attempted_at?: string;
           model?: string | null;
           prompt_version?: string;
           provider: string;
@@ -170,6 +177,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["review_generation_status"];
         };
         Update: {
+          attempt_count?: number;
           business_id?: string;
           created_at?: string;
           error_code?: string | null;
@@ -178,6 +186,7 @@ export type Database = {
           id?: string;
           input_hash?: string | null;
           language?: Database["public"]["Enums"]["generation_language"];
+          last_attempted_at?: string;
           model?: string | null;
           prompt_version?: string;
           provider?: string;
@@ -221,6 +230,7 @@ export type Database = {
       };
       review_questions: {
         Row: {
+          archived_at: string | null;
           business_id: string;
           created_at: string;
           id: string;
@@ -230,6 +240,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          archived_at?: string | null;
           business_id: string;
           created_at?: string;
           id?: string;
@@ -239,6 +250,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          archived_at?: string | null;
           business_id?: string;
           created_at?: string;
           id?: string;
@@ -339,9 +351,63 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      apply_review_option_action: {
+        Args: {
+          p_action: string;
+          p_business_id: string;
+          p_direction?: string | null;
+          p_is_active?: boolean | null;
+          p_label?: string | null;
+          p_option_id?: string | null;
+          p_question_id: string;
+          p_value?: string | null;
+        };
+        Returns: string;
+      };
+      apply_review_question_action: {
+        Args: {
+          p_action: string;
+          p_business_id: string;
+          p_direction?: string | null;
+          p_is_active?: boolean | null;
+          p_question?: string | null;
+          p_question_id?: string | null;
+        };
+        Returns: string;
+      };
+      apply_subscription_action: {
+        Args: {
+          p_action: string;
+          p_business_id: string;
+          p_custom_expires_at?: string | null;
+          p_months?: number | null;
+        };
+        Returns: string;
+      };
+      finish_review_generation: {
+        Args: {
+          p_error_code?: string | null;
+          p_generated_text?: string | null;
+          p_generation_id: string;
+          p_status: Database["public"]["Enums"]["review_generation_status"];
+        };
+        Returns: undefined;
+      };
       is_admin: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      reserve_review_generation: {
+        Args: {
+          p_business_id: string;
+          p_input_hash: string;
+          p_language: Database["public"]["Enums"]["generation_language"];
+          p_model: string;
+          p_prompt_version: string;
+          p_provider: string;
+          p_session_id: string;
+        };
+        Returns: Array<{ generation_id: string; generation_number: number }>;
       };
     };
     Enums: {
@@ -355,7 +421,7 @@ export type Database = {
         | "GOOGLE_REVIEW_CLICK";
       business_status: "ACTIVE" | "SUSPENDED" | "ARCHIVED";
       generation_language: "en" | "ne";
-      review_generation_status: "SUCCEEDED" | "FAILED";
+      review_generation_status: "PENDING" | "SUCCEEDED" | "FAILED";
       subscription_status:
         | "TRIAL"
         | "ACTIVE"

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight, Building2, MessageSquareText, Sparkles } from "lucide-react";
 
-import { requireAdmin } from "@/lib/auth/admin";
+import { requireAdminPage } from "@/lib/auth/admin";
 
 export const metadata = {
-  title: "Admin home | Smart Review QR",
+  title: "Admin home | Boostup AI Smart QR",
 };
 
 const setupCards = [
@@ -23,7 +23,7 @@ const setupCards = [
 ] as const;
 
 export default async function AdminHomePage() {
-  const admin = await requireAdmin();
+  const admin = await requireAdminPage();
   const displayName = admin.display_name?.trim() || "Administrator";
 
   return (

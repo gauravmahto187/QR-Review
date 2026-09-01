@@ -6,7 +6,7 @@ import { LoginForm } from "@/features/auth/login-form";
 import { getAdminAuthState } from "@/lib/auth/admin";
 
 export const metadata = {
-  title: "Admin sign in | Smart Review QR",
+  title: "Admin sign in | Boostup AI Smart QR",
 };
 
 export default async function LoginPage() {
@@ -25,7 +25,7 @@ export default async function LoginPage() {
           </div>
 
           <p className="mt-6 text-sm font-semibold text-emerald-700">
-            Smart Review QR
+            Boostup AI Smart QR
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
             Welcome back

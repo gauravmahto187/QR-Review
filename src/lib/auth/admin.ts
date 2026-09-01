@@ -1,5 +1,7 @@
 import "server-only";
 
+import { redirect } from "next/navigation";
+
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -44,6 +46,15 @@ export async function requireAdmin(): Promise<AdminProfile> {
   if (!admin) {
     throw new Error("Administrator authorization required.");
   }
+
+  return admin;
+}
+
+export async function requireAdminPage(): Promise<AdminProfile> {
+  const { admin, authUserId } = await getAdminAuthState();
+
+  if (!authUserId) redirect("/login");
+  if (!admin) redirect("/login?error=unauthorized");
 
   return admin;
 }

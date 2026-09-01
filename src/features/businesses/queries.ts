@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCurrentSubscriptionsByBusinessIds } from "@/features/subscriptions/queries";
 import type { Database } from "@/types/database";
 
 type BusinessStatus = Database["public"]["Enums"]["business_status"];
@@ -28,7 +29,8 @@ export async function listBusinesses(filters: {
   const { data, error } = await query;
 
   if (error) throw new Error("Unable to load businesses.");
-  return { businesses: data, supabase };
+  const subscriptions = await getCurrentSubscriptionsByBusinessIds(data.map((business) => business.id));
+  return { businesses: data, subscriptions, supabase };
 }
 
 export async function getBusinessById(id: string) {

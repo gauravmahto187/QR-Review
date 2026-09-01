@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { updateBusinessAction } from "@/features/businesses/actions";
 import { BusinessForm } from "@/features/businesses/business-form";
 import { getBusinessById } from "@/features/businesses/queries";
+import { requireAdminPage } from "@/lib/auth/admin";
 
 export default async function EditBusinessPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   const { business } = await getBusinessById(id);
   if (!business) notFound();
