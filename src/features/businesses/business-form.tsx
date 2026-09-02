@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 
 import { normalizeGoogleMapsUrl, slugifyBusinessName } from "@/features/businesses/schemas";
 import type { BusinessFormState } from "@/features/businesses/actions";
+import { validateLogoFile } from "@/features/businesses/logo-validation";
 import type { Tables } from "@/types/database";
 
 type Business = Tables<"businesses">;
@@ -36,6 +37,7 @@ export function BusinessForm({
   const [googleReviewUrl, setGoogleReviewUrl] = useState(business?.google_review_url ?? "");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoPreviewFailed, setLogoPreviewFailed] = useState(false);
+  const [logoClientError, setLogoClientError] = useState<string | null>(null);
 
   useEffect(() => () => {
     if (logoPreview) URL.revokeObjectURL(logoPreview);
@@ -46,9 +48,17 @@ export function BusinessForm({
     if (mode === "create" && !slugEdited) setSlug(slugifyBusinessName(value));
   }
 
-  function handleLogoChange(file?: File) {
+  function handleLogoChange(input: HTMLInputElement) {
+    const file = input.files?.[0];
     if (logoPreview) URL.revokeObjectURL(logoPreview);
     setLogoPreviewFailed(false);
+    const validationError = validateLogoFile(file ?? null);
+    setLogoClientError(validationError);
+    if (validationError) {
+      input.value = "";
+      setLogoPreview(null);
+      return;
+    }
     setLogoPreview(file ? URL.createObjectURL(file) : null);
   }
 
@@ -199,10 +209,10 @@ export function BusinessForm({
             className="sr-only"
             id="logo"
             name="logo"
-            onChange={(event) => handleLogoChange(event.target.files?.[0])}
+            onChange={(event) => handleLogoChange(event.currentTarget)}
             type="file"
           />
-          <FieldError errors={state.fieldErrors?.logo} />
+          {logoClientError ? <p className="mt-2 text-sm text-rose-600" role="alert">{logoClientError}</p> : <FieldError errors={state.fieldErrors?.logo} />}
         </div>
       </div>
 

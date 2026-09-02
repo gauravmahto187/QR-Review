@@ -3,9 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
-  ALLOWED_LOGO_MIME_TYPES,
   BUSINESS_LOGO_BUCKET,
-  MAX_LOGO_SIZE_BYTES,
 } from "@/features/businesses/constants";
 import type { Database } from "@/types/database";
 
@@ -16,20 +14,6 @@ const extensionByMimeType: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
-
-export function validateLogoFile(file: File | null) {
-  if (!file || file.size === 0) return null;
-
-  if (file.size > MAX_LOGO_SIZE_BYTES) {
-    return "Logo must be 2 MiB or smaller.";
-  }
-
-  if (!(ALLOWED_LOGO_MIME_TYPES as readonly string[]).includes(file.type)) {
-    return "Use a PNG, JPEG, WebP, HEIC, or HEIF image.";
-  }
-
-  return null;
-}
 
 export async function uploadBusinessLogo(
   supabase: SupabaseClient<Database>,

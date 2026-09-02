@@ -12,8 +12,8 @@ import {
 import {
   removeBusinessLogo,
   uploadBusinessLogo,
-  validateLogoFile,
 } from "@/features/businesses/storage";
+import { validateLogoFile } from "@/features/businesses/logo-validation";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database, Json } from "@/types/database";
