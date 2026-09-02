@@ -79,7 +79,7 @@ export function AdminShell({
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 px-5 py-3 backdrop-blur md:hidden">
+        <header className="mobile-app-header sticky top-0 z-20 border-b border-slate-200/70 bg-white/95 px-5 pb-3 shadow-[0_8px_24px_-22px_rgba(15,23,42,0.4)] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-xl items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
