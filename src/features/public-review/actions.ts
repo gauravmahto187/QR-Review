@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { PublicReviewActionState } from "@/features/public-review/types";
 import { createPrivilegedSupabaseClient } from "@/lib/supabase/privileged";
-import { createPublicSession, loadExistingPublicSession, publicSessionFromRow, resolvePublicReview } from "@/server/services/public-review";
+import { createPublicSession, loadExistingPublicSession, publicSessionFromRow, resolveAvailablePublicBusiness, resolvePublicReview } from "@/server/services/public-review";
 import { generatePublicReview } from "@/server/services/review-generation";
 import { prepareReviewHandoff } from "@/server/services/review-handoff";
 
@@ -36,17 +36,19 @@ export async function startPublicReviewAction(slug: string, _state: PublicReview
 export async function savePublicAnswerAction(slug: string, questionId: string, optionId: string): Promise<PublicReviewActionState> {
   if (!slugSchema.safeParse(slug).success || !idSchema.safeParse(questionId).success || !idSchema.safeParse(optionId).success) return { error: "That answer could not be saved." };
   try {
-    const resolved = await resolvePublicReview(slug);
+    const resolved = await resolveAvailablePublicBusiness(slug);
     if (resolved.kind !== "READY") return { error: "This review form is no longer available." };
-    const session = await loadExistingPublicSession(resolved.business.id);
+    const [session, questionResult, optionResult] = await Promise.all([
+      loadExistingPublicSession(resolved.business.id),
+      resolved.supabase.from("review_questions").select("id").eq("id", questionId).eq("business_id", resolved.business.id).eq("is_active", true).is("archived_at", null).maybeSingle(),
+      resolved.supabase.from("review_question_options").select("id, question_id").eq("id", optionId).eq("question_id", questionId).eq("is_active", true).maybeSingle(),
+    ]);
     if (!session) return { error: "Your review session expired. Please refresh to start again." };
-    const question = resolved.questions.find((item) => item.id === questionId);
-    if (!question?.options.some((option) => option.id === optionId)) return { error: "That answer is no longer available." };
+    if (questionResult.error || optionResult.error || !questionResult.data || !optionResult.data) return { error: "That answer is no longer available." };
     const currentAnswers = session.answers && !Array.isArray(session.answers) && typeof session.answers === "object" ? session.answers : {};
     const answers = { ...currentAnswers, [questionId]: optionId };
     if (Object.keys(answers).length > 5) return { error: "Too many answers were submitted." };
-    const supabase = createPrivilegedSupabaseClient();
-    const { data, error } = await supabase.from("review_sessions").update({ answers }).eq("id", session.id).eq("business_id", resolved.business.id).select("*").single();
+    const { data, error } = await resolved.supabase.from("review_sessions").update({ answers }).eq("id", session.id).eq("business_id", resolved.business.id).select("*").single();
     if (error) throw error;
     return { session: publicSessionFromRow(data) };
   } catch {

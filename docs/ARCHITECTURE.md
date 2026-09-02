@@ -108,7 +108,7 @@ The later customer route is `/r/[slug]`. Server logic will resolve the business,
 
 ## AI and analytics boundaries
 
-Feature code calls the provider-independent `generateReview()` boundary. `MockProvider` is the key-free development default and produces grounded English or Nepali text through the same contract as `GeminiProvider`. Gemini uses the server-only key, a configurable 3–30 second timeout (15 seconds by default), normalized errors, and a configurable model (`gemini-2.5-flash-lite` by default). `OpenAIProvider` remains a non-operational compatibility stub.
+Feature code calls the provider-independent `generateReview()` boundary. `MockProvider` is the key-free development default and produces grounded English or Nepali text through the same contract as `GeminiProvider`. Gemini uses the server-only key, a configurable 3–30 second timeout (15 seconds by default), normalized errors, and a configurable model (`gemini-3.5-flash-lite` by default). `OpenAIProvider` remains a non-operational compatibility stub.
 
 Prompt construction is isolated from UI and versioned as `v1`. It receives only the server-resolved business name, question text, selected option label/value, and `en` or `ne`. Output normalization rejects empty, excessively short, or excessive responses before persistence.
 

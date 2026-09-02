@@ -30,7 +30,7 @@ const serverEnvSchema = z.object({
   SUPABASE_SECRET_KEY: optionalString,
   AI_PROVIDER: z.enum(["mock", "gemini", "openai"]).default("mock"),
   GEMINI_API_KEY: optionalString,
-  GEMINI_MODEL: z.string().trim().min(1).max(120).default("gemini-2.5-flash-lite"),
+  GEMINI_MODEL: z.string().trim().min(1).max(120).default("gemini-3.5-flash-lite"),
   AI_TIMEOUT_MS: z.coerce.number().int().min(3_000).max(30_000).default(15_000),
   OPENAI_API_KEY: optionalString,
   RATE_LIMIT_SECRET: z.preprocess(

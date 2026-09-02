@@ -69,7 +69,8 @@ This is the V1 decision log. Changes should be recorded here before architecture
 60. A valid business with no valid active questions does not create a session and shows a friendly configuration state. Unavailable and missing businesses expose no internal status details.
 61. `generateReview()` is the sole AI boundary. Mock is the safe default, Gemini is the first real server provider, and the OpenAI adapter remains an inactive future-compatible stub.
 62. Prompt `v1` receives only database-resolved business/question/option data and `en` or `ne`; browser-submitted prompt facts are never accepted.
-63. Gemini uses `gemini-2.5-flash-lite`, a 15-second timeout, server-only credentials, normalized failure codes, and validated plain-text output.
+63. Gemini uses `gemini-3.5-flash-lite`, a 15-second timeout, server-only credentials, normalized failure codes, and validated plain-text output. The previous 2.5 default is no longer available to new API users.
+64. Vercel Functions run in `bom1` so database-backed requests execute beside the Mumbai Supabase project instead of the `iad1` default.
 64. Generation numbers are reserved atomically under a review-session lock. One initial generation and one regeneration are final database-enforced limits, including under concurrent requests.
 65. Durable V1 abuse protection rejects duplicate in-flight calls, enforces a failed-attempt cooldown, and caps provider attempts per generation number. A shared coarse IP/provider quota is required before production launch.
 66. Generated review editing is local and does not consume AI calls or persist keystrokes. Final edited-text persistence is deferred to Google handoff.

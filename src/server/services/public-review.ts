@@ -27,7 +27,7 @@ export function publicSessionFromRow(row: Tables<"review_sessions">): PublicSess
   };
 }
 
-export async function resolvePublicReview(slug: string) {
+export async function resolveAvailablePublicBusiness(slug: string) {
   const supabase = createPrivilegedSupabaseClient();
   const { data: business, error: businessError } = await supabase.from("businesses").select("*").eq("slug", slug).maybeSingle();
   if (businessError) throw new Error("Unable to load this review page.");
@@ -37,6 +37,14 @@ export async function resolvePublicReview(slug: string) {
   if (subscriptionError) throw new Error("Unable to load this review page.");
   const availability = evaluateBusinessAvailability(business.status, subscription);
   if (!availability.valid) return { business, kind: "UNAVAILABLE" as const };
+
+  return { business, kind: "READY" as const, supabase };
+}
+
+export async function resolvePublicReview(slug: string) {
+  const resolvedBusiness = await resolveAvailablePublicBusiness(slug);
+  if (resolvedBusiness.kind !== "READY") return resolvedBusiness;
+  const { business, supabase } = resolvedBusiness;
 
   const { data: questions, error: questionError } = await supabase.from("review_questions").select("id, question, sort_order").eq("business_id", business.id).eq("is_active", true).is("archived_at", null).order("sort_order");
   if (questionError) throw new Error("Unable to load this review page.");

@@ -23,7 +23,7 @@ Required production variables:
 - `RATE_LIMIT_SECRET`: random server-only value of at least 32 characters used only to HMAC rate-limit identifiers.
 - `AI_PROVIDER=gemini` and `GEMINI_API_KEY` for the supported production AI path.
 
-Optional server variables are `GEMINI_MODEL` (default `gemini-2.5-flash-lite`), `AI_TIMEOUT_MS` (3–30 seconds, default 15 seconds), `LOG_LEVEL`, `OPENAI_API_KEY` for the existing inactive compatibility path, and `READINESS_TOKEN` to enable the protected readiness endpoint. `AI_PROVIDER=mock` is development-only and rejected when `VERCEL_ENV=production` or `APP_ENV=production`.
+Optional server variables are `GEMINI_MODEL` (default `gemini-3.5-flash-lite`), `AI_TIMEOUT_MS` (3–30 seconds, default 15 seconds), `LOG_LEVEL`, `OPENAI_API_KEY` for the existing inactive compatibility path, and `READINESS_TOKEN` to enable the protected readiness endpoint. `AI_PROVIDER=mock` is development-only and rejected when `VERCEL_ENV=production` or `APP_ENV=production`.
 
 Never put `SUPABASE_SECRET_KEY`, `RATE_LIMIT_SECRET`, Gemini/OpenAI keys, or `READINESS_TOKEN` in a `NEXT_PUBLIC_` variable.
 

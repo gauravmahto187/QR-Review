@@ -8,6 +8,8 @@ Server-only and required in production: `SUPABASE_SECRET_KEY`, `RATE_LIMIT_SECRE
 
 Optional server-only values: `GEMINI_MODEL`, `AI_TIMEOUT_MS`, `LOG_LEVEL`, `READINESS_TOKEN`, and the existing `OPENAI_API_KEY` compatibility value. `READINESS_TOKEN` must be 32+ characters. `AI_PROVIDER=mock` is development-only. Production validation is selected by Vercel's `VERCEL_ENV=production` or explicit `APP_ENV=production`.
 
+Vercel Functions are pinned to Mumbai (`bom1`) in `vercel.json`, close to the South Asia Supabase project. Static assets remain globally served by Vercel's CDN.
+
 ## Rate limiting and public mutation safety
 
 The durable limiter lives in Supabase and works across Vercel instances. Current fixed-window policies are 12 starts/10 minutes, 120 answers/10 minutes, 20 completions/10 minutes, 6 generations/10 minutes, 30 text saves/10 minutes, 12 handoffs/10 minutes, and 60 page-view events/minute per HMAC fingerprint. Generation also retains the stricter database-enforced two-successful-version limit, duplicate reservation lock, cooldown, and attempt caps.

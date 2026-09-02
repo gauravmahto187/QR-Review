@@ -13,10 +13,7 @@ import { loadExistingPublicSession, resolvePublicReview } from "@/server/service
 
 function providerFailure(error: unknown) {
   const code = error instanceof AIProviderError ? error.code : "GENERATION_FAILED";
-  if (code === "MISSING_CONFIGURATION") return { code, message: "Review generation is temporarily unavailable. Please try again later." };
-  if (code === "PROVIDER_TIMEOUT") return { code, message: "Your review took too long to generate. Please wait a moment and try again." };
-  if (code === "INVALID_RESPONSE") return { code, message: "We couldn’t prepare a usable review this time. Please try again." };
-  return { code, message: "We couldn’t generate your review right now. Please try again shortly." };
+  return { code, message: "We couldn’t generate your review right now. Please try again." };
 }
 
 function reservationFailure(message?: string) {
@@ -57,6 +54,7 @@ async function resolveInput(slug: string) {
 }
 
 export async function generatePublicReview(slug: string): Promise<{ error?: string; generation?: PublicGeneration }> {
+  const startedAt = performance.now();
   let generationId: string | null = null;
   let supabase: ReturnType<typeof createPrivilegedSupabaseClient> | null = null;
   try {
@@ -73,7 +71,11 @@ export async function generatePublicReview(slug: string): Promise<{ error?: stri
       p_provider: provider.name,
       p_session_id: context.session.id,
     });
-    if (reserveError || !reservation?.[0]) return { error: reservationFailure(reserveError?.message) };
+    if (reserveError || !reservation?.[0]) {
+      const code = reserveError?.message?.includes("GENERATION_RATE_LIMITED") ? "GENERATION_RATE_LIMIT" : "GENERATION_RESERVATION_FAILED";
+      logger.warn("review_generation.reservation_failed", { code, durationMs: Math.round(performance.now() - startedAt) });
+      return { error: reservationFailure(reserveError?.message) };
+    }
     generationId = reservation[0].generation_id;
     const generationNumber = reservation[0].generation_number as 1 | 2;
 
@@ -82,16 +84,20 @@ export async function generatePublicReview(slug: string): Promise<{ error?: stri
       generated = await provider.generate(context.input);
     } catch (error) {
       const failure = providerFailure(error);
-      logger.warn("review_generation.provider_failed", { code: failure.code, provider: provider.name });
+      logger.warn("review_generation.provider_failed", { code: failure.code, durationMs: Math.round(performance.now() - startedAt), model: provider.model, provider: provider.name });
       await supabase.rpc("finish_review_generation", { p_error_code: failure.code, p_generated_text: null, p_generation_id: generationId, p_status: "FAILED" });
       return { error: failure.message };
     }
 
     const { error: finishError } = await supabase.rpc("finish_review_generation", { p_error_code: null, p_generated_text: generated.text, p_generation_id: generationId, p_status: "SUCCEEDED" });
-    if (finishError) return { error: "Your review was prepared but couldn’t be saved. Please try again." };
+    if (finishError) {
+      logger.error("review_generation.persistence_failed", { code: "GENERATION_PERSISTENCE_FAILED", durationMs: Math.round(performance.now() - startedAt) });
+      return { error: "We couldn’t generate your review right now. Please try again." };
+    }
 
     const eventType = generationNumber === 1 ? "REVIEW_GENERATED" : "REVIEW_REGENERATED";
     await supabase.from("analytics_events").insert({ business_id: context.business.id, event_type: eventType, metadata: { generation_number: generationNumber }, session_id: context.session.id });
+    logger.info("review_generation.completed", { durationMs: Math.round(performance.now() - startedAt), generationNumber, provider: provider.name });
     return { generation: { canRegenerate: generationNumber < 2, generationNumber, language: context.input.language, text: generated.text } };
   } catch (error) {
     if (generationId && supabase) await supabase.rpc("finish_review_generation", { p_error_code: "GENERATION_FAILED", p_generated_text: null, p_generation_id: generationId, p_status: "FAILED" });
