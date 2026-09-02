@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertCircle, ImagePlus, LoaderCircle, Save } from "lucide-react";
+import { AlertCircle, ExternalLink, ImagePlus, LoaderCircle, Save } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
-import { slugifyBusinessName } from "@/features/businesses/schemas";
+import { normalizeGoogleReviewUrl, slugifyBusinessName } from "@/features/businesses/schemas";
 import type { BusinessFormState } from "@/features/businesses/actions";
 import type { Tables } from "@/types/database";
 
@@ -33,6 +33,7 @@ export function BusinessForm({
   const [name, setName] = useState(business?.name ?? "");
   const [slug, setSlug] = useState(business?.slug ?? "");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [googleReviewUrl, setGoogleReviewUrl] = useState(business?.google_review_url ?? "");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoPreviewFailed, setLogoPreviewFailed] = useState(false);
 
@@ -53,6 +54,7 @@ export function BusinessForm({
 
   const inputClass =
     "mt-2 min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 disabled:bg-slate-100";
+  const testGoogleReviewUrl = normalizeGoogleReviewUrl(googleReviewUrl);
 
   return (
     <form action={formAction} className="pb-28 sm:pb-4">
@@ -113,19 +115,27 @@ export function BusinessForm({
           <FieldError errors={state.fieldErrors?.description} />
         </label>
 
-        <label className="block text-sm font-semibold text-slate-800">
-          Google Review URL
+        <div>
+          <label className="block text-sm font-semibold text-slate-800" htmlFor="google-review-url">
+            Google Review Link
+          </label>
           <input
             className={inputClass}
-            defaultValue={business?.google_review_url ?? ""}
+            id="google-review-url"
             inputMode="url"
             name="googleReviewUrl"
+            onChange={(event) => setGoogleReviewUrl(event.target.value)}
             placeholder="https://g.page/r/.../review"
             required
             type="url"
+            value={googleReviewUrl}
           />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-xs leading-5 text-slate-500">Use the direct Google review link for this business.</p>
+            {testGoogleReviewUrl ? <a className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800" href={testGoogleReviewUrl} rel="noreferrer" target="_blank">Test link<ExternalLink className="size-3.5" /></a> : null}
+          </div>
           <FieldError errors={state.fieldErrors?.googleReviewUrl} />
-        </label>
+        </div>
 
         <label className="block text-sm font-semibold text-slate-800">
           Primary color <span className="font-normal text-slate-400">(optional)</span>

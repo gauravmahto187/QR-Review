@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, Clipboard, ExternalLink, Languages, LoaderCircle, Pencil, RefreshCw, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ExternalLink, Languages, LoaderCircle, Pencil, RefreshCw, Sparkles, TriangleAlert } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import type { PublicGeneration, PublicQuestion, PublicReviewActionState, PublicSession } from "@/features/public-review/types";
@@ -102,7 +102,6 @@ function GenerationState({ error, onGenerate, pending }: { error: string | null;
 
 function GeneratedReviewResult({ error, generation, onRegenerate, pending, slug }: { error: string | null; generation: PublicGeneration; onRegenerate: () => void; pending: boolean; slug: string }) {
   const [text, setText] = useState(generation.text);
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [handoffError, setHandoffError] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [handoffPending, startHandoffTransition] = useTransition();
@@ -125,46 +124,29 @@ function GeneratedReviewResult({ error, generation, onRegenerate, pending, slug 
     }
   }
 
-  async function copyReview() {
-    setFeedback(null);
-    setHandoffError(null);
-    setFallbackUrl(null);
-    if (!text.trim()) { setHandoffError("Write at least one character before copying your review."); return; }
-    const copied = await copyReviewText();
-    setFeedback(copied ? "Review copied" : null);
-    if (!copied) setHandoffError("Copy wasn’t available. Select the review text above and copy it manually.");
-    startHandoffTransition(async () => {
-      const result = await requestReview({ action: "SAVE_TEXT", finalText: text, slug });
-      if (result.error && copied) setHandoffError("Your review was copied, but we couldn’t save this edited version for refresh.");
-    });
-  }
-
-  function continueToGoogle() {
-    setFeedback(null);
+  function openGoogleMaps() {
     setHandoffError(null);
     setFallbackUrl(null);
     if (!text.trim()) { setHandoffError("Write at least one character before continuing."); return; }
     const copyAttempt = copyReviewText();
     startHandoffTransition(async () => {
       const [copied, result] = await Promise.all([copyAttempt, requestReview({ action: "HANDOFF", finalText: text, slug })]);
-      if (!result.googleUrl) { setHandoffError(result.error ?? "We couldn’t open Google. Your review is still available above."); return; }
+      if (!result.googleUrl) { setHandoffError(result.error ?? "We couldn’t open Google Maps. Your review is still available above."); return; }
       if (copied) {
-        setFeedback("Review copied. Paste it into Google and submit.");
-        window.setTimeout(() => window.location.assign(result.googleUrl as string), 700);
+        window.location.assign(result.googleUrl);
       } else {
         setFallbackUrl(result.googleUrl);
-        setHandoffError("Copy wasn’t available. Copy the visible review manually, then open Google.");
+        setHandoffError("Copy the selected review manually, then open Google Maps.");
       }
     });
   }
 
   return <div className="mt-7"><div className="flex items-center gap-3"><span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><Check className="size-5" /></span><div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Your review is ready</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Make it sound like you</h2></div></div><p className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500"><Languages className="size-4" />{generation.language === "ne" ? "Nepali" : "English"} · Version {generation.generationNumber} of 2</p>
-    <label className="mt-5 block text-sm font-semibold text-slate-700" htmlFor="generated-review"><span className="inline-flex items-center gap-2"><Pencil className="size-4" />Edit your review</span></label><textarea className="mt-2 min-h-52 w-full resize-y rounded-2xl border border-slate-200 bg-white p-4 text-base leading-7 text-slate-800 shadow-inner outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10" id="generated-review" maxLength={1200} onChange={(event) => { setText(event.target.value); setFeedback(null); setFallbackUrl(null); }} ref={textareaRef} value={text} /><p className="mt-2 text-xs leading-5 text-slate-400">Edit freely. Your final version is saved only when you copy or continue.</p>{error ? <ErrorMessage message={error} /> : null}
+    <label className="mt-5 block text-sm font-semibold text-slate-700" htmlFor="generated-review"><span className="inline-flex items-center gap-2"><Pencil className="size-4" />Edit your review</span></label><textarea className="mt-2 min-h-52 w-full resize-y rounded-2xl border border-slate-200 bg-white p-4 text-base leading-7 text-slate-800 shadow-inner outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10" id="generated-review" maxLength={1200} onChange={(event) => { setText(event.target.value); setFallbackUrl(null); }} ref={textareaRef} value={text} /><p className="mt-2 text-xs leading-5 text-slate-400">Edit freely. We’ll copy this text before opening Google Maps.</p>{error ? <ErrorMessage message={error} /> : null}
     {generation.canRegenerate ? <button className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={handoffPending} onClick={onRegenerate} type="button"><RefreshCw className="size-4" />Regenerate another version</button> : <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-center text-sm text-slate-500">You’ve used the available regeneration. You can still edit this version.</p>}
-    <div className="sticky -bottom-5 z-10 mt-5 border-t border-slate-100 bg-white/95 py-4 backdrop-blur"><div className="grid grid-cols-[0.8fr_1.2fr] gap-3"><button className="flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={handoffPending} onClick={copyReview} type="button"><Clipboard className="size-4" />Copy Review</button><button className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/10 disabled:opacity-60" disabled={handoffPending} onClick={continueToGoogle} type="button">{handoffPending ? <LoaderCircle className="size-5 animate-spin" /> : <ExternalLink className="size-5" />}Continue to Google</button></div></div>
-    {feedback ? <p className="mt-3 rounded-2xl bg-emerald-50 p-4 text-center text-sm font-semibold text-emerald-800" role="status"><Check className="mr-2 inline size-4" />{feedback}</p> : null}
+    <div className="sticky -bottom-5 z-10 mt-5 border-t border-slate-100 bg-white/95 py-4 backdrop-blur"><button className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 text-base font-semibold text-white shadow-lg shadow-emerald-900/10 disabled:opacity-60" disabled={handoffPending} onClick={openGoogleMaps} type="button">{handoffPending ? <LoaderCircle className="size-5 animate-spin" /> : <ExternalLink className="size-5" />}Open Google Maps</button></div>
     {handoffError ? <p className="mt-3 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800" role="alert">{handoffError}</p> : null}
-    {fallbackUrl ? <a className="mt-3 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-amber-300 bg-white px-5 text-sm font-semibold text-amber-900" href={fallbackUrl}><ExternalLink className="size-4" />Open Google anyway</a> : null}
+    {fallbackUrl ? <a className="mt-3 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-amber-300 bg-white px-5 text-sm font-semibold text-amber-900" href={fallbackUrl}><ExternalLink className="size-4" />Open Google Maps</a> : null}
   </div>;
 }
 

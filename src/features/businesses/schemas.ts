@@ -16,25 +16,31 @@ export function slugifyBusinessName(value: string) {
     .slice(0, 80);
 }
 
-export function isAllowedGoogleReviewUrl(value: string) {
+export function normalizeGoogleReviewUrl(value: string) {
   try {
-    const url = new URL(value);
+    const url = new URL(value.trim());
     const hostname = url.hostname.toLowerCase();
 
-    if (url.protocol !== "https:") return false;
+    if (url.protocol !== "https:" || url.username || url.password || url.hash) return null;
 
-    return (
-      hostname === "g.page" ||
-      hostname === "goo.gl" ||
-      hostname === "maps.app.goo.gl" ||
-      hostname === "google.com" ||
-      hostname.endsWith(".google.com") ||
-      /^google\.[a-z.]{2,}$/.test(hostname) ||
-      /^www\.google\.[a-z.]{2,}$/.test(hostname)
-    );
+    if (hostname === "search.google.com" && /^\/local\/writereview\/?$/.test(url.pathname)) {
+      const placeId = url.searchParams.get("placeid");
+      if (!placeId || !/^[A-Za-z0-9_-]{10,256}$/.test(placeId)) return null;
+      return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
+    }
+
+    if (hostname === "g.page" && (/^\/r\/[A-Za-z0-9_-]+\/review\/?$/.test(url.pathname) || /^\/[A-Za-z0-9._~-]+\/review\/?$/.test(url.pathname))) {
+      return `https://g.page${url.pathname.replace(/\/$/, "")}`;
+    }
+
+    return null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function isAllowedGoogleReviewUrl(value: string) {
+  return normalizeGoogleReviewUrl(value) !== null;
 }
 
 const optionalDescription = z.preprocess(
@@ -72,8 +78,9 @@ export const businessFormSchema = z.object({
     .trim()
     .max(2048)
     .refine(isAllowedGoogleReviewUrl, {
-      message: "Enter a valid HTTPS Google Review or Google Maps URL.",
-    }),
+      message: "Use the direct Google review link for this business.",
+    })
+    .transform((value) => normalizeGoogleReviewUrl(value) as string),
   status: z.enum(BUSINESS_STATUSES),
 });
 

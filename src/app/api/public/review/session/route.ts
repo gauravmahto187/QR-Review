@@ -7,12 +7,12 @@ import { hasTrustedMutationOrigin } from "@/lib/security/origin";
 import { checkPublicRateLimit, type PublicRateLimitScope } from "@/lib/security/rate-limit";
 
 const requestSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("START"), slug: z.string().min(1).max(80) }),
-  z.object({ action: z.literal("ANSWER"), slug: z.string().min(1).max(80), questionId: z.uuid(), optionId: z.uuid() }),
-  z.object({ action: z.literal("COMPLETE"), slug: z.string().min(1).max(80), language: z.enum(["en", "ne"]) }),
-  z.object({ action: z.literal("GENERATE"), slug: z.string().min(1).max(80) }),
-  z.object({ action: z.literal("SAVE_TEXT"), slug: z.string().min(1).max(80), finalText: z.string().min(1).max(1200) }),
-  z.object({ action: z.literal("HANDOFF"), slug: z.string().min(1).max(80), finalText: z.string().min(1).max(1200) }),
+  z.object({ action: z.literal("START"), slug: z.string().min(1).max(80) }).strict(),
+  z.object({ action: z.literal("ANSWER"), slug: z.string().min(1).max(80), questionId: z.uuid(), optionId: z.uuid() }).strict(),
+  z.object({ action: z.literal("COMPLETE"), slug: z.string().min(1).max(80), language: z.enum(["en", "ne"]) }).strict(),
+  z.object({ action: z.literal("GENERATE"), slug: z.string().min(1).max(80) }).strict(),
+  z.object({ action: z.literal("SAVE_TEXT"), slug: z.string().min(1).max(80), finalText: z.string().min(1).max(1200) }).strict(),
+  z.object({ action: z.literal("HANDOFF"), slug: z.string().min(1).max(80), finalText: z.string().min(1).max(1200) }).strict(),
 ]);
 
 export async function POST(request: Request) {
