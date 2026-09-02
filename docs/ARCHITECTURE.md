@@ -126,6 +126,8 @@ Global response headers deny framing and object embedding, restrict referrers an
 
 Server logs are newline-delimited JSON with event, severity, and timestamp. The logger drops context keys associated with cookies, tokens, passwords, secrets, session IDs, authorization, API keys, or review text and truncates strings. Expected provider failures are warnings with normalized codes; unexpected infrastructure failures are errors without raw Supabase, SQL, or provider payloads. Vercel logs are sufficient for V1; external error tracking is a future enhancement.
 
+Vercel Web Analytics is mounted once in the root layout and provides deployment-level page-view/visitor telemetry. It is operational hosting analytics and remains separate from the application-owned Supabase funnel events and conversion formulas.
+
 `/api/health` remains a dependency-free no-store liveness response. `/api/health/readiness` is disabled unless a server-only token is configured, compares bearer tokens in constant time, checks database reachability, and returns only `ready`, `not_ready`, or `unauthorized`.
 
 Successful and failed attempts are stored in `review_generations` with provider, model, prompt version, input hash, language, attempt count, status, safe error code, and generated text when successful. `REVIEW_GENERATED` and `REVIEW_REGENERATED` are best-effort, unique per session/type, and recorded only after the corresponding successful generation. Analytics failures never discard a generated review.

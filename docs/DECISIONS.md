@@ -105,3 +105,4 @@ This is the V1 decision log. Changes should be recorded here before architecture
 96. V1 observability uses structured redacted server logs and protected readiness. A third-party error tracker is deferred until operational need justifies the added data processor and configuration.
 97. Production QR identity is not final until `NEXT_PUBLIC_APP_URL` is the confirmed public HTTPS origin. Final printed assets must not be distributed before domain and scan verification.
 98. Applied production migrations are immutable. Backup/PITR capability must be confirmed before launch, and recovery is validated away from the live project using a new corrective migration when schema repair is needed.
+99. Vercel Web Analytics is mounted globally for deployment-level visitor/page-view telemetry. It does not replace or alter the anonymous Supabase product-funnel analytics model.
