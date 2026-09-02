@@ -1,6 +1,6 @@
 import "server-only";
 
-import { normalizeGoogleReviewUrl } from "@/features/businesses/schemas";
+import { normalizeGoogleMapsUrl } from "@/features/businesses/schemas";
 import { createPrivilegedSupabaseClient } from "@/lib/supabase/privileged";
 import { loadExistingPublicSession, resolvePublicReview } from "@/server/services/public-review";
 
@@ -12,8 +12,8 @@ export async function prepareReviewHandoff(slug: string, finalText: string, reco
     if (resolved.kind !== "READY") return { error: "This review page is no longer available." };
     const session = await loadExistingPublicSession(resolved.business.id);
     if (!session?.completed_at) return { error: "Your review session expired. Please refresh to start again." };
-    const googleUrl = normalizeGoogleReviewUrl(resolved.business.google_review_url);
-    if (!googleUrl) return { error: "The Google Review link is unavailable. Please ask the business for help." };
+    const googleUrl = normalizeGoogleMapsUrl(resolved.business.google_review_url);
+    if (!googleUrl) return { error: "The Google Maps link is unavailable. Please ask the business for help." };
 
     const supabase = createPrivilegedSupabaseClient();
     const { data: generation, error: generationError } = await supabase.from("review_generations").select("id").eq("session_id", session.id).eq("business_id", resolved.business.id).eq("status", "SUCCEEDED").order("generation_number", { ascending: false }).limit(1).maybeSingle();

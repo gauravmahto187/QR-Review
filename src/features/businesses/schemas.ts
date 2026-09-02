@@ -16,12 +16,23 @@ export function slugifyBusinessName(value: string) {
     .slice(0, 80);
 }
 
-export function normalizeGoogleReviewUrl(value: string) {
+export function normalizeGoogleMapsUrl(value: string) {
   try {
     const url = new URL(value.trim());
     const hostname = url.hostname.toLowerCase();
 
-    if (url.protocol !== "https:" || url.username || url.password || url.hash) return null;
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return null;
+
+    const isGoogleMapsUrl =
+      (hostname === "google.com" || hostname === "www.google.com") &&
+      (url.pathname === "/maps" || url.pathname.startsWith("/maps/"));
+    const isMapsGoogleUrl = hostname === "maps.google.com";
+    const isGoogleMapsShareUrl =
+      hostname === "maps.app.goo.gl" && url.pathname.length > 1;
+
+    if (isGoogleMapsUrl || isMapsGoogleUrl || isGoogleMapsShareUrl) {
+      return url.toString();
+    }
 
     if (hostname === "search.google.com" && /^\/local\/writereview\/?$/.test(url.pathname)) {
       const placeId = url.searchParams.get("placeid");
@@ -29,8 +40,8 @@ export function normalizeGoogleReviewUrl(value: string) {
       return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
     }
 
-    if (hostname === "g.page" && (/^\/r\/[A-Za-z0-9_-]+\/review\/?$/.test(url.pathname) || /^\/[A-Za-z0-9._~-]+\/review\/?$/.test(url.pathname))) {
-      return `https://g.page${url.pathname.replace(/\/$/, "")}`;
+    if (hostname === "g.page" && url.pathname.length > 1) {
+      return url.toString();
     }
 
     return null;
@@ -39,8 +50,8 @@ export function normalizeGoogleReviewUrl(value: string) {
   }
 }
 
-export function isAllowedGoogleReviewUrl(value: string) {
-  return normalizeGoogleReviewUrl(value) !== null;
+export function isAllowedGoogleMapsUrl(value: string) {
+  return normalizeGoogleMapsUrl(value) !== null;
 }
 
 const optionalDescription = z.preprocess(
@@ -76,11 +87,12 @@ export const businessFormSchema = z.object({
   googleReviewUrl: z
     .string()
     .trim()
+    .min(1, "Enter a Google Maps link.")
     .max(2048)
-    .refine(isAllowedGoogleReviewUrl, {
-      message: "Use the direct Google review link for this business.",
+    .refine(isAllowedGoogleMapsUrl, {
+      message: "Use a valid HTTPS Google Maps link.",
     })
-    .transform((value) => normalizeGoogleReviewUrl(value) as string),
+    .transform((value) => normalizeGoogleMapsUrl(value) as string),
   status: z.enum(BUSINESS_STATUSES),
 });
 

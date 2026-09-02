@@ -4,7 +4,7 @@
 
 Boostup AI Smart QR is a subscription-based Google Review automation SaaS from Boostup. One central admin manages multiple businesses. Each business receives a permanent URL at `/r/[slug]`, encoded in both QR codes and NFC tags.
 
-An anonymous customer answers multiple-choice questions, selects English or Nepali for the generated review, and receives a concise AI-assisted review grounded only in those answers. The customer may edit it and regenerate once. Continuing copies the review and opens the business's Google Review URL.
+An anonymous customer answers multiple-choice questions, selects English or Nepali for the generated review, and receives a concise AI-assisted review grounded only in those answers. The customer may edit it and regenerate once. Continuing copies the review and opens the business's Google Maps link.
 
 The application never injects text into Google, auto-pastes, automates a browser, or claims that a Google review was submitted. `GOOGLE_REVIEW_CLICK` means only that the customer was sent to Google.
 
@@ -40,10 +40,10 @@ There are no business-admin or customer accounts in V1.
 - Permanent public `/r/[slug]` customer flow with live availability enforcement, anonymous session progress, validated answer IDs, language selection, and non-blocking start/page-view analytics.
 - Provider-independent server-side review generation with realistic key-free mock output, optional Gemini output, versioned prompts, English/Nepali support, persisted attempts, one regeneration, and durable per-session limits.
 - Mobile-first editable generated-review result with polished loading, retry, clipboard, and Google-handoff states.
-- Customer-controlled Copy Review and Continue to Google handoff with checkpointed edits, validated business-owned destinations, clipboard fallback, and non-blocking outbound-click analytics.
+- Customer-controlled Open Google Maps handoff with checkpointed edits, clipboard copy and fallback, validated business-owned destinations, and non-blocking outbound-click analytics.
 - Permanent per-business QR management with authenticated preview, copyable public URL, print-quality PNG/SVG downloads, and subscription-independent scan identity.
 - Mobile-first platform and per-business analytics with real event counts, conversion rates, Kathmandu trends, subscription alerts, sanitized recent activity, and authenticated server-side aggregation.
-- Permanent, reserved-word-protected business slugs and server-validated Google Review URLs.
+- Permanent, reserved-word-protected business slugs and required server-validated Google Maps links, with direct Google review links also supported.
 - Public business-logo bucket configuration for PNG, JPEG, WebP, HEIC, and HEIF up to 2 MiB, with admin-only writes.
 - `GET /api/health`, independent of Supabase and AI.
 - Production environment invariants, configurable Gemini timeout/model, durable cross-instance public rate limiting, same-origin public mutations, security headers, redacted structured logs, and protected database readiness.

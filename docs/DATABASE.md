@@ -5,7 +5,7 @@ The V1 schema is versioned in `supabase/migrations` and applied to the configure
 ## Entities
 
 - `admin_profiles`: links `auth.users` identities to application role `ADMIN`.
-- `businesses`: permanent slug, display data, Google Review URL, branding, and status.
+- `businesses`: permanent slug, display data, required Google Maps destination (stored in the existing `google_review_url` column), branding, and status.
 - `subscriptions`: append-style subscription history with an explicit `is_current` marker.
 - `review_questions`: ordered business-specific questions.
 - `review_question_options`: ordered options belonging to questions.
