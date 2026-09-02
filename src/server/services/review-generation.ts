@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 
 import type { PublicGeneration } from "@/features/public-review/types";
 import { createPrivilegedSupabaseClient } from "@/lib/supabase/privileged";
+import { logger } from "@/lib/observability/logger";
 import { getReviewProvider } from "@/server/ai";
 import { AIProviderError } from "@/server/ai/errors";
 import { PROMPT_VERSION } from "@/server/ai/prompt";
@@ -81,6 +82,7 @@ export async function generatePublicReview(slug: string): Promise<{ error?: stri
       generated = await provider.generate(context.input);
     } catch (error) {
       const failure = providerFailure(error);
+      logger.warn("review_generation.provider_failed", { code: failure.code, provider: provider.name });
       await supabase.rpc("finish_review_generation", { p_error_code: failure.code, p_generated_text: null, p_generation_id: generationId, p_status: "FAILED" });
       return { error: failure.message };
     }
@@ -97,6 +99,7 @@ export async function generatePublicReview(slug: string): Promise<{ error?: stri
     if (message === "SESSION_INVALID") return { error: "Your review session expired. Please refresh to start again." };
     if (message === "BUSINESS_UNAVAILABLE") return { error: "This review form is no longer available." };
     if (message === "ANSWERS_INVALID") return { error: "Your saved answers are no longer valid. Please start a new review." };
+    logger.error("review_generation.failed", { reason: "unexpected" });
     return { error: "We couldn’t generate your review right now. Please try again." };
   }
 }

@@ -7,8 +7,8 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const loginSchema = z.object({
-  email: z.email("Enter a valid email address."),
-  password: z.string().min(1, "Enter your password."),
+  email: z.email("Enter a valid email address.").max(254),
+  password: z.string().min(1, "Enter your password.").max(256),
 });
 
 export type LoginActionState = {

@@ -17,5 +17,6 @@ export type PublicGeneration = {
 export type PublicReviewActionState = {
   error?: string;
   generation?: PublicGeneration;
+  googleUrl?: string;
   session?: PublicSession;
 };

@@ -13,6 +13,7 @@ The V1 schema is versioned in `supabase/migrations` and applied to the configure
 - `review_generations`: stored generation attempts, provider/model metadata, language, status, and output/error.
 - `analytics_events`: approved anonymous product events and small JSONB metadata.
 - `audit_logs`: important admin actions.
+- `rate_limit_counters`: service-role-only atomic abuse counters keyed by irreversible HMAC digests.
 
 There is no `review_answers` table in V1. `review_sessions.answers` is a JSON object that must preserve stable question and option IDs, allowing normalization or question-level analytics later.
 
@@ -65,13 +66,25 @@ Public review sessions contain a generated anonymous UUID, business ID, object-s
 
 `review_generations` persists both successful output and normalized failures. It stores session/business IDs, provider, model, prompt version, SHA-256 input hash, generation number, language, status, generated text or safe error code, attempt count, and last-attempt time. API keys and raw provider responses are never stored.
 
+`final_text` and `finalized_at` checkpoint the customer’s current edited version only when Copy Review or Continue to Google is explicitly selected. Original AI output remains unchanged in `generated_text`. Final text is limited to 1–1,200 trimmed characters and may exist only on a successful generation.
+
 `reserve_review_generation` and `finish_review_generation` are executable only by the service role. Reservation validates an unexpired completed session and matching language, locks it, assigns generation 1 or 2, rejects in-flight/rate-limited/exhausted requests, and caps retries. Finalization changes only a pending record and sets `regeneration_count` after generation 2 succeeds.
 
 Partial unique analytics indexes allow at most one `REVIEW_GENERATED` and one `REVIEW_REGENERATED` event per session. These events are written only after successful persistence.
 
+`GOOGLE_REVIEW_CLICK` uses a unique 30-second session/time-bucket deduplication key. Its metadata says `customer_sent_to_google`; it is an outbound-handoff event and never represents a confirmed Google submission.
+
+## Analytics aggregation
+
+`get_platform_analytics(from, to)` returns current business-status counts, current subscription alert buckets, selected-range event counts, Kathmandu daily trend buckets, and at most eight sanitized recent events. Subscription alerts classify expired, expires today, within 3 days, within 7 days, and within 30 days, with one current row per business.
+
+`get_business_analytics(business_id, from, to)` applies the same event counts and Kathmandu trend logic to one business. Both stable functions require an authenticated `ADMIN`, reject invalid or greater-than-367-day ranges, and rely on RLS plus the existing analytics time/business indexes. They do not return raw event metadata or session IDs.
+
+Dashboard queries aggregate `PAGE_VIEW`, `REVIEW_STARTED`, `REVIEW_GENERATED`, `REVIEW_REGENERATED`, and `GOOGLE_REVIEW_CLICK`. `QUESTION_COMPLETED` and unverifiable review-submission events do not exist.
+
 ## Indexes
 
-Indexes support slug lookup, current/expiring subscriptions, ordered questions/options, session and generation history, analytics by business/type/time, and audit history.
+Indexes support slug lookup, current/expiring subscriptions, ordered questions/options, session and generation history, analytics by business/type/time, bounded dashboard aggregation, and audit history.
 
 ## Security
 
@@ -85,9 +98,23 @@ Subscription management records `SUBSCRIPTION_TRIAL_STARTED`, `SUBSCRIPTION_ACTI
 
 Question management records `REVIEW_QUESTION_CREATED`, `REVIEW_QUESTION_UPDATED`, `REVIEW_QUESTION_ENABLED`, `REVIEW_QUESTION_DISABLED`, `REVIEW_QUESTION_ARCHIVED`, `REVIEW_QUESTION_REORDERED`, `REVIEW_OPTION_CREATED`, `REVIEW_OPTION_UPDATED`, `REVIEW_OPTION_ENABLED`, `REVIEW_OPTION_DISABLED`, `REVIEW_OPTION_REORDERED`, and `DEFAULT_REVIEW_QUESTIONS_CREATED`.
 
+## Durable abuse counters
+
+`consume_rate_limit(scope, key_hash, limit, window_seconds)` atomically resets or increments one fixed-window row. It accepts only a 64-character lowercase SHA-256 digest, bounded limits/windows, and a service-role JWT. The table has RLS enabled, no anonymous or authenticated grants/policies, and stores no raw network, cookie, anonymous-session, or customer-content values. The composite primary key supports the complete lookup; no scanning is required.
+
+## Backup and recovery
+
+Migrations are the authoritative schema history and must remain source-controlled. Supabase production backup/PITR availability depends on the selected project plan and must be confirmed before launch. Before a release, verify local and remote versions with `npx supabase migration list`, dry-run pending changes, and take or confirm an appropriate backup.
+
+Recovery must begin with identifying the affected project, timestamp, migration state, and backup/PITR point. Restore into a separate project or follow Supabase's reviewed recovery process, validate data and RLS there, then switch traffic deliberately. Never edit, reorder, or replace a production migration that has already been applied; create a new corrective migration. Destructive recovery testing is prohibited against the live project.
+
 ## TypeScript types
 
-`src/types/database.ts` matches these migrations for Phase 2. Once a local or hosted database is available, regenerate types from the applied schema and review the diff before replacing the checked-in file.
+`src/types/database.ts` matches the applied schema through Phase 12. Regenerate types from the linked database after future migrations and review the diff before replacing the checked-in file.
+
+## QR persistence
+
+QR images are deterministic derivatives of the existing permanent business slug and configured application base URL. No QR blob, dynamic redirect token, subscription snapshot, tracking parameter, or additional QR database table is stored. Changing a display name leaves the encoded URL unchanged; changing a slug outside supported application behavior would invalidate printed assets.
 
 ## Timezone
 

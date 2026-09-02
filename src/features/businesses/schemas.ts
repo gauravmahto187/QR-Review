@@ -16,7 +16,7 @@ export function slugifyBusinessName(value: string) {
     .slice(0, 80);
 }
 
-function isAllowedGoogleReviewUrl(value: string) {
+export function isAllowedGoogleReviewUrl(value: string) {
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase();

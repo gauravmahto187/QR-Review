@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import {
   businessFormSchema,
@@ -148,6 +149,7 @@ export async function updateBusinessAction(
   formData: FormData,
 ): Promise<BusinessFormState> {
   const admin = await requireAdmin();
+  if (!z.uuid().safeParse(businessId).success) return { error: "Business not found." };
   const supabase = await createServerSupabaseClient();
   const { data: current, error: currentError } = await supabase
     .from("businesses")
@@ -240,7 +242,7 @@ export async function changeBusinessStatusAction(
   const nextStatus = formData.get("status");
 
   if (
-    typeof businessId !== "string" ||
+    typeof businessId !== "string" || !z.uuid().safeParse(businessId).success ||
     !["ACTIVE", "SUSPENDED", "ARCHIVED"].includes(String(nextStatus))
   ) {
     return { error: "Invalid status request." };

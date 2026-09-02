@@ -39,13 +39,22 @@ There are no business-admin or customer accounts in V1.
 - Mobile-first review-question and option management with stable ordering, safe archive, validated active-state limits, defaults, and an admin-only customer-flow preview.
 - Permanent public `/r/[slug]` customer flow with live availability enforcement, anonymous session progress, validated answer IDs, language selection, and non-blocking start/page-view analytics.
 - Provider-independent server-side review generation with realistic key-free mock output, optional Gemini output, versioned prompts, English/Nepali support, persisted attempts, one regeneration, and durable per-session limits.
-- Mobile-first editable generated-review result with polished loading/retry states and an explicit future Google-handoff placeholder.
+- Mobile-first editable generated-review result with polished loading, retry, clipboard, and Google-handoff states.
+- Customer-controlled Copy Review and Continue to Google handoff with checkpointed edits, validated business-owned destinations, clipboard fallback, and non-blocking outbound-click analytics.
+- Permanent per-business QR management with authenticated preview, copyable public URL, print-quality PNG/SVG downloads, and subscription-independent scan identity.
+- Mobile-first platform and per-business analytics with real event counts, conversion rates, Kathmandu trends, subscription alerts, sanitized recent activity, and authenticated server-side aggregation.
 - Permanent, reserved-word-protected business slugs and server-validated Google Review URLs.
 - Public business-logo bucket configuration for PNG, JPEG, WebP, HEIC, and HEIF up to 2 MiB, with admin-only writes.
 - `GET /api/health`, independent of Supabase and AI.
+- Production environment invariants, configurable Gemini timeout/model, durable cross-instance public rate limiting, same-origin public mutations, security headers, redacted structured logs, and protected database readiness.
+- Mobile safe-area, reduced-motion, focus, logo fallback/dimension, and friendly admin error handling refinements.
+
+## Production readiness status
+
+The codebase is prepared for a Vercel/Supabase production release but has not been deployed. The final domain, Vercel project, production environment values, Gemini key/provider test, Supabase backup/PITR plan, and hands-on mobile/regression acceptance must be completed before approval to deploy. Permanent QR URLs remain origin-dependent, so production QR files must not be printed until the final domain and deployed scan flow are verified.
 
 ## V1 exclusions
 
 No payment gateway, recurring billing, business-specific admin accounts, customer accounts, social links, marketing automation, advanced CRM, direct Google review posting, or unsupported Google manipulation is in scope.
 
-QR generation, analytics dashboards, Google handoff, online payments, recurring billing, reminders, and deployment are not implemented yet. Phase 8 generates and locally edits review text but does not copy it, redirect to Google, or persist edited keystrokes.
+Online payments, recurring billing, scheduled reports, email reports, reminders, NFC writer UI, external analytics, and deployment are not implemented yet. QR codes are permanent derived assets rather than dynamic tracking redirects. Google handoff requires explicit customer action and never auto-pastes, injects text, submits a review, or claims a submission occurred.

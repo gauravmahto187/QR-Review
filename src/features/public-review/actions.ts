@@ -6,9 +6,11 @@ import type { PublicReviewActionState } from "@/features/public-review/types";
 import { createPrivilegedSupabaseClient } from "@/lib/supabase/privileged";
 import { createPublicSession, loadExistingPublicSession, publicSessionFromRow, resolvePublicReview } from "@/server/services/public-review";
 import { generatePublicReview } from "@/server/services/review-generation";
+import { prepareReviewHandoff } from "@/server/services/review-handoff";
 
 const slugSchema = z.string().min(1).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const idSchema = z.uuid();
+const finalReviewSchema = z.string().trim().min(1).max(1200);
 
 async function recordReviewStarted(businessId: string, sessionId: string) {
   const supabase = createPrivilegedSupabaseClient();
@@ -75,4 +77,18 @@ export async function generatePublicReviewAction(slug: string): Promise<PublicRe
   const parsedSlug = slugSchema.safeParse(slug);
   if (!parsedSlug.success) return { error: "This review page is unavailable." };
   return generatePublicReview(parsedSlug.data);
+}
+
+export async function saveFinalReviewAction(slug: string, finalText: string): Promise<PublicReviewActionState> {
+  const parsedSlug = slugSchema.safeParse(slug);
+  const parsedText = finalReviewSchema.safeParse(finalText);
+  if (!parsedSlug.success || !parsedText.success) return { error: "Keep your review between 1 and 1,200 characters." };
+  return prepareReviewHandoff(parsedSlug.data, parsedText.data, false);
+}
+
+export async function prepareGoogleHandoffAction(slug: string, finalText: string): Promise<PublicReviewActionState> {
+  const parsedSlug = slugSchema.safeParse(slug);
+  const parsedText = finalReviewSchema.safeParse(finalText);
+  if (!parsedSlug.success || !parsedText.success) return { error: "Keep your review between 1 and 1,200 characters." };
+  return prepareReviewHandoff(parsedSlug.data, parsedText.data, true);
 }

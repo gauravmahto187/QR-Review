@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createPrivilegedSupabaseClient } from "@/lib/supabase/privileged";
+import { hasTrustedMutationOrigin } from "@/lib/security/origin";
+import { checkPublicRateLimit } from "@/lib/security/rate-limit";
 import { resolvePublicReview } from "@/server/services/public-review";
 
 const requestSchema = z.object({ slug: z.string().min(1).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/) });
@@ -12,6 +14,10 @@ const VISITOR_COOKIE = "boostup_review_visitor";
 export async function POST(request: Request) {
   const response = new NextResponse(null, { status: 204 });
   try {
+    if (!hasTrustedMutationOrigin(request)) return response;
+    if (Number(request.headers.get("content-length") ?? 0) > 2048) return response;
+    const rateLimit = await checkPublicRateLimit(request, "page-view");
+    if (!rateLimit.allowed) return response;
     const parsed = requestSchema.safeParse(await request.json());
     if (!parsed.success) return response;
     const resolved = await resolvePublicReview(parsed.data.slug);

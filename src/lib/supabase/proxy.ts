@@ -23,7 +23,11 @@ export async function refreshSupabaseAuth(request: NextRequest) {
         );
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, options, value }) =>
-          response.cookies.set(name, value, options),
+          response.cookies.set(name, value, {
+            ...options,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+          }),
         );
       },
     },

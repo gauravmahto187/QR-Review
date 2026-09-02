@@ -1,93 +1,45 @@
+import { AlertTriangle, BarChart3, Building2, CalendarClock } from "lucide-react";
 import Link from "next/link";
-import { ArrowUpRight, Building2, MessageSquareText, Sparkles } from "lucide-react";
 
-import { requireAdminPage } from "@/lib/auth/admin";
+import { ConversionGrid, EventMetricGrid, MetricCard, RecentActivityList, TrendChart } from "@/features/analytics/analytics-ui";
+import { getAnalyticsDateRange } from "@/features/analytics/date-range";
+import { DateRangeFilter } from "@/features/analytics/date-range-filter";
+import { getPlatformAnalytics } from "@/features/analytics/queries";
+import { formatNepalDate } from "@/features/subscriptions/utils";
 
-export const metadata = {
-  title: "Admin home | Boostup AI Smart QR",
-};
+export const metadata = { title: "Analytics | Boostup AI Smart QR" };
 
-const setupCards = [
-  {
-    description: "Create, search, edit, suspend, and archive business profiles.",
-    href: "/admin/businesses",
-    icon: Building2,
-    label: "Businesses",
-  },
-  {
-    description: "Review sessions and generation tools will be added later.",
-    href: "/admin/reviews",
-    icon: MessageSquareText,
-    label: "Reviews",
-  },
-] as const;
+function alertLabel(window: string) {
+  if (window === "EXPIRED") return "Expired";
+  if (window === "TODAY") return "Expires today";
+  if (window === "WITHIN_3_DAYS") return "Within 3 days";
+  if (window === "WITHIN_7_DAYS") return "Within 7 days";
+  return "Within 30 days";
+}
 
-export default async function AdminHomePage() {
-  const admin = await requireAdminPage();
-  const displayName = admin.display_name?.trim() || "Administrator";
+export default async function AdminHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const range = getAnalyticsDateRange(await searchParams);
+  const analytics = await getPlatformAnalytics(range);
+  const subscriptionMetrics = [
+    ["Expired", analytics.subscriptions.expired],
+    ["Today", analytics.subscriptions.expires_today],
+    ["Within 3 days", analytics.subscriptions.within_3_days],
+    ["Within 7 days", analytics.subscriptions.within_7_days],
+    ["Within 30 days", analytics.subscriptions.within_30_days],
+  ] as const;
 
-  return (
-    <div>
-      <p className="text-sm font-semibold text-emerald-700">Admin home</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-        Welcome, {displayName}
-      </h1>
-      <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-        Your secure workspace is ready. Business and review management will
-        appear here as each product phase is approved.
-      </p>
+  return <div>
+    <div className="flex items-center gap-3"><span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><BarChart3 className="size-5" /></span><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Platform analytics</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Dashboard</h1></div></div><p className="mt-3 text-sm leading-6 text-slate-500">Real anonymous activity for {range.label.toLowerCase()}. Google handoffs are outbound clicks, not confirmed submissions.</p>
+    <DateRangeFilter basePath="/admin" range={range} />
 
-      <section className="mt-8 rounded-[1.75rem] border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
-        <div className="flex items-start gap-4">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm">
-            <Sparkles className="size-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h2 className="text-base font-semibold text-emerald-950">
-              Admin foundation active
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-emerald-900/75">
-              Authentication, authorization, protected routing, and the mobile
-              workspace shell are in place.
-            </p>
-          </div>
-        </div>
-      </section>
+    <section className="mt-7"><div className="flex items-center gap-2"><Building2 className="size-5 text-slate-500" /><h2 className="text-lg font-semibold text-slate-950">Businesses</h2></div><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><MetricCard label="Total" value={analytics.businesses.total} /><MetricCard label="Active" value={analytics.businesses.active} /><MetricCard label="Suspended" value={analytics.businesses.suspended} /><MetricCard label="Archived" value={analytics.businesses.archived} /></div></section>
 
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Workspace
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-950">
-              Workspace tools
-            </h2>
-          </div>
-        </div>
+    <section className="mt-8"><h2 className="text-lg font-semibold text-slate-950">Review activity</h2><EventMetricGrid events={analytics.events} /></section>
+    <section className="mt-8"><h2 className="text-lg font-semibold text-slate-950">Conversion</h2><p className="mt-1 text-xs leading-5 text-slate-500">Rates safely show 0% when no earlier funnel activity exists.</p><ConversionGrid events={analytics.events} /></section>
+    <section className="mt-8 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><h2 className="text-lg font-semibold text-slate-950">Activity trend</h2><p className="mt-1 text-xs text-slate-500">Daily totals use Asia/Kathmandu calendar dates.</p><TrendChart points={analytics.trend} /></section>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {setupCards.map(({ description, href, icon: Icon, label }) => (
-            <Link
-              className="group rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-              href={href}
-              key={href}
-            >
-              <div className="flex items-start justify-between">
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                  <Icon className="size-5" aria-hidden="true" />
-                </span>
-                <ArrowUpRight
-                  className="size-5 text-slate-300 transition group-hover:text-slate-600"
-                  aria-hidden="true"
-                />
-              </div>
-              <h3 className="mt-5 text-base font-semibold text-slate-950">{label}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+    <section className="mt-8"><div className="flex items-center gap-2"><CalendarClock className="size-5 text-amber-600" /><h2 className="text-lg font-semibold text-slate-950">Subscription alerts</h2></div><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">{subscriptionMetrics.map(([label, value]) => <MetricCard key={label} label={label} value={value} />)}</div>{analytics.subscriptionAlerts.length ? <div className="mt-4 space-y-3">{analytics.subscriptionAlerts.map((alert) => <Link className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4" href={`/admin/businesses/${alert.business_id}/subscription`} key={alert.business_id}><div className="min-w-0"><p className="truncate text-sm font-semibold text-amber-950">{alert.business_name}</p><p className="mt-1 text-xs text-amber-800">{alertLabel(alert.window)} · {formatNepalDate(alert.expires_at)}</p></div><AlertTriangle className="size-5 shrink-0 text-amber-600" /></Link>)}</div> : <p className="mt-4 rounded-2xl bg-slate-50 p-5 text-center text-sm text-slate-500">No expired or expiring subscriptions.</p>}</section>
+
+    <section className="mt-8 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><h2 className="text-lg font-semibold text-slate-950">Recent activity</h2><p className="mt-1 text-xs text-slate-500">Anonymous product events only—no customer identity or session details.</p><RecentActivityList activity={analytics.recentActivity} /></section>
+  </div>;
 }

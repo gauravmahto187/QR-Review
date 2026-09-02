@@ -24,8 +24,12 @@ export function BusinessLogo({
       <img
         alt={alt}
         className={`${sizing} shrink-0 border border-slate-200 bg-white object-cover`}
+        decoding="async"
+        height={size === "lg" ? 80 : 48}
+        loading="lazy"
         onError={() => setFailed(true)}
         src={url}
+        width={size === "lg" ? 80 : 48}
       />
     );
   }

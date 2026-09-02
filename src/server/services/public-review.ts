@@ -65,6 +65,11 @@ export async function loadExistingPublicSession(businessId: string) {
   return data;
 }
 
+export async function hasPublicSessionCookie(businessId: string) {
+  const cookieStore = await cookies();
+  return cookieStore.has(reviewSessionCookieName(businessId));
+}
+
 export async function createPublicSession(businessId: string) {
   const supabase = createPrivilegedSupabaseClient();
   const now = new Date();
@@ -79,12 +84,12 @@ export async function createPublicSession(businessId: string) {
 
 export async function loadPublicGeneration(sessionId: string): Promise<PublicGeneration | null> {
   const supabase = createPrivilegedSupabaseClient();
-  const { data, error } = await supabase.from("review_generations").select("generated_text, generation_number, language").eq("session_id", sessionId).eq("status", "SUCCEEDED").order("generation_number", { ascending: false }).limit(1).maybeSingle();
+  const { data, error } = await supabase.from("review_generations").select("final_text, generated_text, generation_number, language").eq("session_id", sessionId).eq("status", "SUCCEEDED").order("generation_number", { ascending: false }).limit(1).maybeSingle();
   if (error || !data?.generated_text) return null;
   return {
     canRegenerate: data.generation_number < 2,
     generationNumber: data.generation_number as 1 | 2,
     language: data.language,
-    text: data.generated_text,
+    text: data.final_text ?? data.generated_text,
   };
 }

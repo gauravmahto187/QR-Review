@@ -7,7 +7,7 @@ import type { GenerateReviewInput, ReviewProvider } from "@/server/ai/types";
 type GeminiResponse = { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
 
 export class GeminiProvider implements ReviewProvider {
-  readonly model = "gemini-2.5-flash-lite";
+  readonly model = serverEnv.GEMINI_MODEL;
   readonly name = "gemini";
 
   async generate(input: GenerateReviewInput) {
@@ -20,7 +20,7 @@ export class GeminiProvider implements ReviewProvider {
         }),
         headers: { "content-type": "application/json", "x-goog-api-key": serverEnv.GEMINI_API_KEY },
         method: "POST",
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(serverEnv.AI_TIMEOUT_MS),
       });
       if (!response.ok) throw new AIProviderError("PROVIDER_UNAVAILABLE");
       const payload = await response.json() as GeminiResponse;

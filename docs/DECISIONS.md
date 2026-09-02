@@ -74,4 +74,34 @@ This is the V1 decision log. Changes should be recorded here before architecture
 65. Durable V1 abuse protection rejects duplicate in-flight calls, enforces a failed-attempt cooldown, and caps provider attempts per generation number. A shared coarse IP/provider quota is required before production launch.
 66. Generated review editing is local and does not consume AI calls or persist keystrokes. Final edited-text persistence is deferred to Google handoff.
 67. `REVIEW_GENERATED` and `REVIEW_REGENERATED` are unique per session/type, occur only after successful persistence, and remain non-blocking.
-68. Phase 8 Continue shows an explicit Google-handoff-next message and performs no clipboard, redirect, posting, or Google automation.
+68. Phase 8 ended with an explicit Google-handoff-next message and performed no clipboard, redirect, posting, or Google automation.
+69. Phase 9 clipboard access occurs only inside explicit Copy Review or Continue to Google actions. Clipboard failure preserves visible text and offers manual copy plus Open Google anyway.
+70. Edited text is persisted only as a Copy/Continue checkpoint on the latest successful generation. Every keystroke is never sent or stored, and original AI output is retained separately.
+71. Google handoff revalidates the anonymous session, business availability, latest successful generation, and the current business-owned HTTPS Google URL. The browser cannot choose the redirect destination.
+72. Successful clipboard handoff uses same-tab navigation for mobile reliability. No popup, auto-paste, DOM injection, automatic posting, or submission claim is allowed.
+73. `GOOGLE_REVIEW_CLICK` means the customer explicitly initiated the Google handoff, not that Google accepted or published a review. Thirty-second deduplication suppresses accidental duplicate taps without blocking later retries.
+74. An expired session cookie produces a friendly restart state. A finalized review restores after refresh only while its anonymous session remains valid.
+75. Every business QR encodes only the permanent URL produced from `NEXT_PUBLIC_APP_URL` and the stored immutable slug: `/r/[slug]`.
+76. QR generation uses the lightweight `qrcode` package with high error correction, a four-module quiet zone, black modules, and a white background. Decorative overlays are excluded for scan reliability.
+77. QR assets are derived on demand rather than stored. Admins receive a 1600px PNG and vector SVG named `boostup-{slug}-qr`.
+78. Admin QR preview and downloads require server-side admin authorization and business lookup. The endpoint accepts no arbitrary URL or redirect input.
+79. Business display name, status, subscription, questions, and AI behavior do not change QR identity. Expiry/suspension shows the existing public unavailable state; renewal restores access through the same print.
+80. NFC requires no separate route or token in V1 and will encode the same permanent URL returned by the shared helper.
+81. A configured public base URL may use HTTP for local development or HTTPS for production, but may not contain credentials, query parameters, or fragments. Production must set the deployed HTTPS origin before printing assets.
+82. `/admin` is the platform analytics dashboard; `/admin/businesses/[id]/analytics` is the isolated business view. Both remain server-rendered and mobile-first.
+83. Dashboard aggregation occurs in authenticated PostgreSQL functions. Raw, unbounded analytics rows are never loaded into the browser, and platform aggregation does not loop over businesses.
+84. The default event range is the last 30 days, with Today, 7-day, 30-day, and validated custom options. Calendar boundaries and daily buckets use `Asia/Kathmandu`; storage and filtering remain UTC.
+85. Review Start Rate is `REVIEW_STARTED / PAGE_VIEW`; Generation Rate is `REVIEW_GENERATED / REVIEW_STARTED`; Google Handoff Rate is `GOOGLE_REVIEW_CLICK / REVIEW_GENERATED`; Overall Handoff Conversion is `GOOGLE_REVIEW_CLICK / PAGE_VIEW`. Division by zero yields 0%.
+86. `GOOGLE_REVIEW_CLICK` is always labeled Google handoff, never review submission. No Google scraping or unverifiable submission event is introduced.
+87. Subscription alerts use the single current subscription and mutually exclusive buckets: expired, today, within 3 days, within 7 days, and within 30 days.
+88. Dashboard responses contain aggregate anonymous data and sanitized event activity only. Session identifiers, cookies, IP addresses, customer identity, answers, review text, secrets, and raw metadata are excluded.
+89. Analytics ranges are capped at 367 days. Existing event type/time and business/type/time indexes are sufficient for V1 aggregation; no speculative index is added.
+90. Production environment validation is activated by `VERCEL_ENV=production` or `APP_ENV=production`; it requires the final HTTPS origin, current-format Supabase configuration, rate-limit secret, and configured Gemini provider.
+91. Gemini remains the production AI provider for V1. Its model and timeout are server-configurable, but raw provider errors and keys never reach customer responses or logs.
+92. Shared abuse protection uses Supabase PostgreSQL rather than an additional vendor. Atomic fixed-window counters store only HMAC digests and are callable only with the secret-key client.
+93. Public session creation, generation, and handoff fail closed in production when durable throttling is unavailable. Answer/completion/save progress may fail open while retaining all database validation and generation caps.
+94. Public mutation API routes require the configured same origin in production. Admin Server Actions retain Next.js origin checks plus server authentication, application authorization, validation, RLS, and authorization-checking RPCs.
+95. Production security headers use a Next-compatible CSP, deny framing/object embedding, minimize browser permissions and referrer leakage, prevent MIME sniffing, and add HSTS on production builds.
+96. V1 observability uses structured redacted server logs and protected readiness. A third-party error tracker is deferred until operational need justifies the added data processor and configuration.
+97. Production QR identity is not final until `NEXT_PUBLIC_APP_URL` is the confirmed public HTTPS origin. Final printed assets must not be distributed before domain and scan verification.
+98. Applied production migrations are immutable. Backup/PITR capability must be confirmed before launch, and recovery is validated away from the live project using a new corrective migration when schema repair is needed.

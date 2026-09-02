@@ -141,12 +141,38 @@ export type Database = {
         };
         Relationships: [];
       };
+      rate_limit_counters: {
+        Row: {
+          key_hash: string;
+          request_count: number;
+          scope: string;
+          updated_at: string;
+          window_started_at: string;
+        };
+        Insert: {
+          key_hash: string;
+          request_count?: number;
+          scope: string;
+          updated_at?: string;
+          window_started_at?: string;
+        };
+        Update: {
+          key_hash?: string;
+          request_count?: number;
+          scope?: string;
+          updated_at?: string;
+          window_started_at?: string;
+        };
+        Relationships: [];
+      };
       review_generations: {
         Row: {
           attempt_count: number;
           business_id: string;
           created_at: string;
           error_code: string | null;
+          final_text: string | null;
+          finalized_at: string | null;
           generated_text: string | null;
           generation_number: number;
           id: string;
@@ -164,6 +190,8 @@ export type Database = {
           business_id: string;
           created_at?: string;
           error_code?: string | null;
+          final_text?: string | null;
+          finalized_at?: string | null;
           generated_text?: string | null;
           generation_number: number;
           id?: string;
@@ -181,6 +209,8 @@ export type Database = {
           business_id?: string;
           created_at?: string;
           error_code?: string | null;
+          final_text?: string | null;
+          finalized_at?: string | null;
           generated_text?: string | null;
           generation_number?: number;
           id?: string;
@@ -384,6 +414,15 @@ export type Database = {
         };
         Returns: string;
       };
+      consume_rate_limit: {
+        Args: {
+          p_key_hash: string;
+          p_limit: number;
+          p_scope: string;
+          p_window_seconds: number;
+        };
+        Returns: boolean;
+      };
       finish_review_generation: {
         Args: {
           p_error_code?: string | null;
@@ -392,6 +431,14 @@ export type Database = {
           p_status: Database["public"]["Enums"]["review_generation_status"];
         };
         Returns: undefined;
+      };
+      get_business_analytics: {
+        Args: { p_business_id: string; p_from: string; p_to: string };
+        Returns: Json;
+      };
+      get_platform_analytics: {
+        Args: { p_from: string; p_to: string };
+        Returns: Json;
       };
       is_admin: {
         Args: Record<PropertyKey, never>;
