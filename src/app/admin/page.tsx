@@ -1,7 +1,7 @@
 import { AlertTriangle, BarChart3, Building2, CalendarClock } from "lucide-react";
 import Link from "next/link";
 
-import { ConversionGrid, EventMetricGrid, MetricCard, RecentActivityList, TrendChart } from "@/features/analytics/analytics-ui";
+import { ConversionGrid, EventMetricGrid, MetricCard, TrendChart } from "@/features/analytics/analytics-ui";
 import { getAnalyticsDateRange } from "@/features/analytics/date-range";
 import { DateRangeFilter } from "@/features/analytics/date-range-filter";
 import { getPlatformAnalytics } from "@/features/analytics/queries";
@@ -39,7 +39,5 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Pr
     <section className="mt-8 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><h2 className="text-lg font-semibold text-slate-950">Activity trend</h2><p className="mt-1 text-xs text-slate-500">Daily totals use Asia/Kathmandu calendar dates.</p><TrendChart points={analytics.trend} /></section>
 
     <section className="mt-8"><div className="flex items-center gap-2"><CalendarClock className="size-5 text-amber-600" /><h2 className="text-lg font-semibold text-slate-950">Subscription alerts</h2></div><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">{subscriptionMetrics.map(([label, value]) => <MetricCard key={label} label={label} value={value} />)}</div>{analytics.subscriptionAlerts.length ? <div className="mt-4 space-y-3">{analytics.subscriptionAlerts.map((alert) => <Link className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4" href={`/admin/businesses/${alert.business_id}/subscription`} key={alert.business_id}><div className="min-w-0"><p className="truncate text-sm font-semibold text-amber-950">{alert.business_name}</p><p className="mt-1 text-xs text-amber-800">{alertLabel(alert.window)} · {formatNepalDate(alert.expires_at)}</p></div><AlertTriangle className="size-5 shrink-0 text-amber-600" /></Link>)}</div> : <p className="mt-4 rounded-2xl bg-slate-50 p-5 text-center text-sm text-slate-500">No expired or expiring subscriptions.</p>}</section>
-
-    <section className="mt-8 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><h2 className="text-lg font-semibold text-slate-950">Recent activity</h2><p className="mt-1 text-xs text-slate-500">Anonymous product events only—no customer identity or session details.</p><RecentActivityList activity={analytics.recentActivity} /></section>
   </div>;
 }

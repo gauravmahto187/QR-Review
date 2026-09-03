@@ -41,8 +41,8 @@ This is the V1 decision log. Changes should be recorded here before architecture
 32. Authentication and authorization remain separate: every `/admin` route requires both a valid Auth identity and an `ADMIN` profile, checked server-side.
 33. Authenticated non-admin users are denied, signed out after an attempted login, and cannot rely on client-side navigation to bypass protection.
 34. The initial existing Auth user is provisioned through an idempotent secret-key script that verifies the Auth user before upserting `admin_profiles`. No password or secret is committed.
-35. The mobile admin shell uses Home, Businesses, Reviews, and More bottom navigation; desktop progressively enhances this to a sidebar.
-36. Home is functional. Reviews remains a protected placeholder, and More contains account/logout controls. No production analytics are fabricated.
+35. The mobile admin shell uses Home, Businesses, Activity, and More bottom navigation; desktop progressively enhances this to a sidebar.
+36. Home focuses on aggregate metrics, trends, and subscription alerts. Activity contains the protected privacy-safe recent event feed, and More contains account/logout controls. No production analytics are fabricated.
 37. Business management is mobile-first and uses cards rather than desktop tables. It includes server-side search/filter reads, create/edit/detail routes, secure logo management, and confirmed lifecycle actions.
 38. Business archiving is a terminal soft-delete state in the admin application. There is no hard-delete action and archived businesses are retained for history.
 39. All business reads use the authenticated RLS client. Every mutation requires server-side admin authorization and writes the applicable audit event.

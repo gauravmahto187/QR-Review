@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  History,
   Home,
-  MessageSquareText,
   MoreHorizontal,
   ShieldCheck,
 } from "lucide-react";
@@ -15,7 +15,7 @@ import { LogoutButton } from "@/features/auth/logout-button";
 const navigation = [
   { href: "/admin", icon: Home, label: "Home" },
   { href: "/admin/businesses", icon: Building2, label: "Businesses" },
-  { href: "/admin/reviews", icon: MessageSquareText, label: "Reviews" },
+  { href: "/admin/activity", icon: History, label: "Activity" },
   { href: "/admin/more", icon: MoreHorizontal, label: "More" },
 ] as const;
 

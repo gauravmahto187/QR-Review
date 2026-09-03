@@ -44,7 +44,7 @@ export function TrendChart({ points }: { points: AnalyticsTrendPoint[] }) {
 function activityLabel(type: RecentActivity["event_type"]) {
   if (type === "REVIEW_GENERATED") return "Review generated";
   if (type === "REVIEW_REGENERATED") return "Review regenerated";
-  return "Google handoff initiated";
+  return "Google Maps opened";
 }
 
 export function RecentActivityList({ activity }: { activity: RecentActivity[] }) {

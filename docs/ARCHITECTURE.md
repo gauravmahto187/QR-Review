@@ -48,7 +48,7 @@ The initial profile is provisioned by an idempotent version-controlled Node scri
 
 ## Admin interface
 
-The admin shell is designed for 360–430px first. Mobile uses a fixed, safe-area-aware bottom navigation with Home, Businesses, Reviews, and More. Tablet and desktop progressively switch to a left sidebar while retaining the same information architecture. Businesses provides mobile-first management; Reviews remains a protected placeholder.
+The admin shell is designed for 360–430px first. Mobile uses a fixed, safe-area-aware bottom navigation with Home, Businesses, Activity, and More. Tablet and desktop progressively switch to a left sidebar while retaining the same information architecture. Businesses provides mobile-first management; Activity contains the privacy-safe cross-business review event feed.
 
 ## Business management
 
@@ -88,7 +88,7 @@ Answers use `{ "question-uuid": "option-uuid" }`. The server accepts one questio
 
 The final step stores only `en` or `ne` in `generation_language`, validates that every current question has a valid answer, and marks the session complete. Generation then restores that session server-side, re-resolves every question and option label/value from the active database configuration, and never accepts prompt text from the browser.
 
-Valid page visits record best-effort `PAGE_VIEW` events through a deduplicated visitor cookie. A session records at most one `REVIEW_STARTED`. Analytics failures never block the review flow, and no `QUESTION_COMPLETED` event exists.
+Valid page visits record best-effort `PAGE_VIEW` events through a deduplicated visitor cookie. The first question is displayed immediately, without a start screen. Selecting the first answer starts the session before saving that answer; existing sessions resume their saved progress. A session records at most one `REVIEW_STARTED`, so viewing the questions alone does not count as a review start. Analytics failures never block the review flow, and no `QUESTION_COMPLETED` event exists.
 
 ## RLS strategy
 

@@ -32,7 +32,7 @@ There are no business-admin or customer accounts in V1.
 - Versioned V1 schema, indexes, constraints, RLS policies, and Storage policies.
 - Central-admin email/password login, logout, and server-protected `/admin` routes.
 - An idempotent secret-key provisioning script for the initial existing Auth user.
-- Mobile-first admin shell with Home, Businesses, Reviews, and More navigation.
+- Mobile-first admin shell with Home, Businesses, Activity, and More navigation.
 - Mobile-first business list, search/status filters, create/edit/detail flows, and lifecycle actions.
 - Mobile-first subscription management with trial, fixed-duration, custom-expiry, suspend, reactivate, cancel, and read-only history flows.
 - Immediate server-enforced business availability based on business status, current subscription state, and UTC expiry.

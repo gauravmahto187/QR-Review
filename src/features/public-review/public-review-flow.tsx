@@ -17,21 +17,16 @@ async function requestReview(body: Record<string, string>): Promise<PublicReview
 }
 
 export function PublicReviewFlow({ initialGeneration, initialSession, initialSessionExpired, questions, slug }: { initialGeneration: PublicGeneration | null; initialSession: PublicSession | null; initialSessionExpired: boolean; questions: PublicQuestion[]; slug: string }) {
-  const [session, setSession] = useState(initialSession);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  if (!session) return <div className="mt-7">{initialSessionExpired ? <div className="mb-5 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800"><span className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4" />Your previous session expired</span><p className="mt-1">Start again to create a new review.</p></div> : <p className="text-center text-sm leading-6 text-slate-600">Answer a few quick questions to prepare your review.</p>}{error ? <ErrorMessage message={error} /> : null}<button className="mt-6 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-800 disabled:opacity-70" disabled={pending} onClick={() => startTransition(async () => { const result = await requestReview({ action: "START", slug }); if (result.session) setSession(result.session); else setError(result.error ?? "We couldn’t start your review."); })} type="button"><Sparkles className="size-5" />{pending ? "Starting…" : initialSessionExpired ? "Start new review" : "Start review"}</button><p className="mt-4 text-center text-xs leading-5 text-slate-400">No login or personal information required.</p></div>;
-  return <ActiveReviewFlow initialGeneration={initialGeneration} initialSession={session} key={session.id} questions={questions} slug={slug} />;
+  return <ActiveReviewFlow initialGeneration={initialGeneration} initialSession={initialSession} initialSessionExpired={initialSessionExpired} key={initialSession?.id ?? "new"} questions={questions} slug={slug} />;
 }
 
-function ActiveReviewFlow({ initialGeneration, initialSession, questions, slug }: { initialGeneration: PublicGeneration | null; initialSession: PublicSession; questions: PublicQuestion[]; slug: string }) {
-  const firstUnanswered = questions.findIndex((question) => !initialSession.answers[question.id]);
+function ActiveReviewFlow({ initialGeneration, initialSession, initialSessionExpired, questions, slug }: { initialGeneration: PublicGeneration | null; initialSession: PublicSession | null; initialSessionExpired: boolean; questions: PublicQuestion[]; slug: string }) {
+  const firstUnanswered = questions.findIndex((question) => !initialSession?.answers[question.id]);
   const [step, setStep] = useState(firstUnanswered === -1 ? questions.length : firstUnanswered);
   const [session, setSession] = useState(initialSession);
-  const [optimisticAnswers, setOptimisticAnswers] = useState(initialSession.answers);
+  const [optimisticAnswers, setOptimisticAnswers] = useState(initialSession?.answers ?? {});
   const [generation, setGeneration] = useState(initialGeneration);
-  const [language, setLanguage] = useState<"en" | "ne">(initialSession.language);
+  const [language, setLanguage] = useState<"en" | "ne">(initialSession?.language ?? "en");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -45,7 +40,7 @@ function ActiveReviewFlow({ initialGeneration, initialSession, questions, slug }
   }
 
   if (generation) return <GeneratedReviewResult error={error} generation={generation} key={generation.generationNumber} onRegenerate={runGeneration} pending={pending} slug={slug} />;
-  if (session.completed) return <GenerationState error={error} onGenerate={runGeneration} pending={pending} />;
+  if (session?.completed) return <GenerationState error={error} onGenerate={runGeneration} pending={pending} />;
 
   const onQuestion = step < questions.length;
   const question = onQuestion ? questions[step] : null;
@@ -58,7 +53,13 @@ function ActiveReviewFlow({ initialGeneration, initialSession, questions, slug }
     const questionStep = step;
     setOptimisticAnswers((answers) => ({ ...answers, [questionId]: optionId }));
     startTransition(async () => {
-      const result = await requestReview({ action: "ANSWER", optionId, questionId, slug });
+      // Start only on the first answer, retaining meaningful review-start analytics.
+      // Await the response so its HTTP-only session cookie exists before saving.
+      const started = session ? { session } : await requestReview({ action: "START", slug });
+      if (started.session) setSession(started.session);
+      const result = started.session
+        ? await requestReview({ action: "ANSWER", optionId, questionId, slug })
+        : started;
       if (result.session) {
         setSession(result.session);
         setOptimisticAnswers(result.session.answers);
@@ -88,6 +89,7 @@ function ActiveReviewFlow({ initialGeneration, initialSession, questions, slug }
   }
 
   return <div className="mt-7">
+    {initialSessionExpired && !session ? <p className="mb-5 flex items-start gap-2 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800"><TriangleAlert className="mt-1 size-4 shrink-0" />Your previous session expired. Answer below to begin again.</p> : null}
     <div className="flex items-center justify-between text-xs font-semibold text-slate-500"><span>{onQuestion ? `Question ${step + 1} of ${questions.length}` : "Review language"}</span><span>{Math.round(progress)}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-600 transition-[width] duration-300" style={{ width: `${progress}%` }} /></div>
     {error ? <ErrorMessage message={error} /> : null}
     {question ? <section className="mt-7"><h2 className="text-2xl font-semibold leading-8 tracking-tight text-slate-950">{question.question}</h2><div className="mt-6 grid gap-3" role="radiogroup" aria-label={question.question}>{question.options.map((option) => <button aria-checked={selected === option.id} className={`flex min-h-14 items-center justify-between rounded-2xl border px-5 text-left text-base font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${selected === option.id ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-600/10" : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"}`} disabled={pending} key={option.id} onClick={() => chooseAnswer(question.id, option.id)} role="radio" type="button"><span>{option.label}</span>{selected === option.id ? <Check className="size-5 text-emerald-700" /> : null}</button>)}</div></section> : <section className="mt-7"><span className="flex size-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700"><Languages className="size-5" /></span><h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">Choose review language</h2><p className="mt-2 text-sm leading-6 text-slate-500">Only the generated review will use this language. The app remains in English.</p><div className="mt-6 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Review language">{([["en", "English"], ["ne", "Nepali"]] as const).map(([value, label]) => <button aria-checked={language === value} className={`min-h-14 rounded-2xl border px-4 text-base font-semibold ${language === value ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-white text-slate-700"}`} key={value} onClick={() => setLanguage(value)} role="radio" type="button">{label}</button>)}</div></section>}
