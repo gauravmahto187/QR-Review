@@ -7,6 +7,8 @@ import { logger } from "@/lib/observability/logger";
 import { createPrivilegedSupabaseClient } from "@/lib/supabase/privileged";
 
 export type PublicRateLimitScope =
+  | "smart-page-view"
+  | "smart-link-click"
   | "page-view"
   | "review-start"
   | "review-answer"
@@ -16,6 +18,8 @@ export type PublicRateLimitScope =
   | "review-handoff";
 
 const policies: Record<PublicRateLimitScope, { limit: number; windowSeconds: number; critical: boolean }> = {
+  "smart-page-view": { critical: false, limit: 60, windowSeconds: 60 },
+  "smart-link-click": { critical: false, limit: 120, windowSeconds: 60 },
   "page-view": { critical: false, limit: 60, windowSeconds: 60 },
   "review-start": { critical: true, limit: 12, windowSeconds: 600 },
   "review-answer": { critical: false, limit: 120, windowSeconds: 600 },
@@ -39,7 +43,11 @@ function clientFingerprint(request: Request) {
 export async function checkPublicRateLimit(request: Request, scope: PublicRateLimitScope) {
   const policy = policies[scope];
   const secret = serverEnv.RATE_LIMIT_SECRET ?? "boostup-local-development-rate-limit-key";
-  const keyHash = createHmac("sha256", secret).update(clientFingerprint(request)).digest("hex");
+  // Smart Links uses no visitor cookie. Only a keyed, non-reversible limiter hash is persisted.
+  const fingerprint = scope.startsWith("smart-")
+    ? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "unknown"
+    : clientFingerprint(request);
+  const keyHash = createHmac("sha256", secret).update(fingerprint).digest("hex");
   try {
     const supabase = createPrivilegedSupabaseClient();
     const { data, error } = await supabase.rpc("consume_rate_limit", {

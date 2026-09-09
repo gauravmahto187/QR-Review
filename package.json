@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "provision:initial-admin": "node --env-file=.env.local scripts/provision-initial-admin.mjs",
-    "configure:business-logo-bucket": "node --env-file=.env.local scripts/configure-business-logo-bucket.mjs"
+    "configure:business-logo-bucket": "node --env-file=.env.local scripts/configure-business-logo-bucket.mjs",
+    "test:qr-branding": "node scripts/test-qr-branding.mjs",
+    "test:smart-links": "node scripts/test-smart-links.mjs",
+    "test:payment-qrs": "node scripts/test-payment-qrs.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
@@ -21,6 +24,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
+    "sharp": "^0.35.4",
     "zod": "^4.5.4"
   },
   "devDependencies": {
@@ -31,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "jsqr": "^1.4.0",
     "supabase": "^2.116.0",
     "tailwindcss": "^4",
     "typescript": "^5"

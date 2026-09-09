@@ -52,8 +52,8 @@ async function writeBusinessAudit(
   if (error) throw new Error("Unable to record the business audit event.");
 }
 
-function getLogoFile(formData: FormData) {
-  const value = formData.get("logo");
+function getLogoFile(formData: FormData, field = "logo") {
+  const value = formData.get(field);
   return value instanceof File && value.size > 0 ? value : null;
 }
 
@@ -79,12 +79,16 @@ export async function createBusinessAction(
   const parsed = businessFormSchema.safeParse(getBusinessFormInput(formData));
   const logo = getLogoFile(formData);
   const logoError = validateLogoFile(logo);
+  const qrLogo = getLogoFile(formData, "qrLogo");
+  const qrLogoError = validateLogoFile(qrLogo);
+  const useBusinessLogoForQr = formData.get("useBusinessLogoForQr") === "on";
 
-  if (!parsed.success || logoError) {
+  if (!parsed.success || logoError || qrLogoError) {
     return {
       fieldErrors: {
         ...(parsed.success ? {} : parsed.error.flatten().fieldErrors),
         ...(logoError ? { logo: [logoError] } : {}),
+        ...(qrLogoError ? { qrLogo: [qrLogoError] } : {}),
       },
     };
   }
@@ -97,12 +101,15 @@ export async function createBusinessAction(
 
   const businessId = crypto.randomUUID();
   let logoPath: string | null = null;
+  let qrLogoPath: string | null = null;
   let businessCreated = false;
 
   try {
     if (logo) {
       logoPath = await uploadBusinessLogo(supabase, businessId, logo);
     }
+
+    if (qrLogo) qrLogoPath = await uploadBusinessLogo(supabase, businessId, qrLogo);
 
     const { data: business, error } = await supabase
       .from("businesses")
@@ -112,6 +119,8 @@ export async function createBusinessAction(
         google_review_url: parsed.data.googleReviewUrl,
         id: businessId,
         logo_path: logoPath,
+        qr_logo_path: qrLogoPath,
+        use_business_logo_for_qr: useBusinessLogoForQr,
         name: parsed.data.name,
         primary_color: parsed.data.primaryColor ?? null,
         slug: parsed.data.slug,
@@ -122,6 +131,7 @@ export async function createBusinessAction(
 
     if (error) {
       if (logoPath) await removeBusinessLogo(supabase, logoPath);
+      if (qrLogoPath) await removeBusinessLogo(supabase, qrLogoPath);
       if (error.code === "23505") {
         return { fieldErrors: { slug: ["This slug is already in use."] } };
       }
@@ -133,8 +143,10 @@ export async function createBusinessAction(
     await writeBusinessAudit(supabase, admin.auth_user_id, business.id, [
       { action: "BUSINESS_CREATED", metadata: { status: parsed.data.status } },
       ...(logoPath ? [{ action: "BUSINESS_LOGO_CHANGED" }] : []),
+      ...(qrLogoPath || useBusinessLogoForQr ? [{ action: "QR_BRANDING_CHANGED" }] : []),
     ]);
   } catch {
+    if (qrLogoPath && !businessCreated) await removeBusinessLogo(supabase, qrLogoPath);
     if (logoPath && !businessCreated) await removeBusinessLogo(supabase, logoPath);
     return { error: "Unable to create the business. Please try again." };
   }
@@ -163,17 +175,23 @@ export async function updateBusinessAction(
   const parsed = businessFormSchema.safeParse({ ...input, slug: current.slug });
   const logo = getLogoFile(formData);
   const logoError = validateLogoFile(logo);
+  const qrLogo = getLogoFile(formData, "qrLogo");
+  const qrLogoError = validateLogoFile(qrLogo);
+  const useBusinessLogoForQr = formData.get("useBusinessLogoForQr") === "on";
 
-  if (!parsed.success || logoError) {
+  if (!parsed.success || logoError || qrLogoError) {
     return {
       fieldErrors: {
         ...(parsed.success ? {} : parsed.error.flatten().fieldErrors),
         ...(logoError ? { logo: [logoError] } : {}),
+        ...(qrLogoError ? { qrLogo: [qrLogoError] } : {}),
       },
     };
   }
 
   let newLogoPath: string | null = null;
+  let newQrLogoPath: string | null = null;
+  const removeQrLogo = formData.get("removeQrLogo") === "on";
   let businessUpdated = false;
 
   try {
@@ -181,12 +199,16 @@ export async function updateBusinessAction(
       newLogoPath = await uploadBusinessLogo(supabase, businessId, logo);
     }
 
+    if (qrLogo && !removeQrLogo) newQrLogoPath = await uploadBusinessLogo(supabase, businessId, qrLogo);
+
     const { error: updateError } = await supabase
       .from("businesses")
       .update({
         description: parsed.data.description ?? null,
         google_review_url: parsed.data.googleReviewUrl,
         logo_path: newLogoPath ?? current.logo_path,
+        qr_logo_path: removeQrLogo ? null : newQrLogoPath ?? current.qr_logo_path,
+        use_business_logo_for_qr: useBusinessLogoForQr,
         name: parsed.data.name,
         primary_color: parsed.data.primaryColor ?? null,
       })
@@ -194,6 +216,7 @@ export async function updateBusinessAction(
 
     if (updateError) {
       if (newLogoPath) await removeBusinessLogo(supabase, newLogoPath);
+      if (newQrLogoPath) await removeBusinessLogo(supabase, newQrLogoPath);
       return { error: "Unable to update the business. Please try again." };
     }
 
@@ -204,6 +227,7 @@ export async function updateBusinessAction(
     if (current.google_review_url !== parsed.data.googleReviewUrl) {
       auditEntries.push({ action: "GOOGLE_REVIEW_URL_CHANGED" });
     }
+    if (newQrLogoPath || removeQrLogo || current.use_business_logo_for_qr !== useBusinessLogoForQr) auditEntries.push({ action: "QR_BRANDING_CHANGED" });
     if (newLogoPath) auditEntries.push({ action: "BUSINESS_LOGO_CHANGED" });
     await writeBusinessAudit(
       supabase,
@@ -212,16 +236,20 @@ export async function updateBusinessAction(
       auditEntries,
     );
 
+    if ((newQrLogoPath || removeQrLogo) && current.qr_logo_path) await removeBusinessLogo(supabase, current.qr_logo_path);
     if (newLogoPath && current.logo_path) {
       await removeBusinessLogo(supabase, current.logo_path);
     }
   } catch {
+    if (newQrLogoPath && !businessUpdated) await removeBusinessLogo(supabase, newQrLogoPath);
     if (newLogoPath && !businessUpdated) {
       await removeBusinessLogo(supabase, newLogoPath);
     }
     return { error: "Unable to update the business. Please try again." };
   }
 
+  revalidatePath(`/admin/businesses/${businessId}/qr`);
+  revalidatePath(`/r/${current.slug}`);
   revalidatePath(`/admin/businesses/${businessId}`);
   revalidatePath("/admin/businesses");
   redirect(`/admin/businesses/${businessId}`);

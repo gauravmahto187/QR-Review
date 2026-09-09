@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   agentRules: false,
   experimental: {
     serverActions: {
-      bodySizeLimit: "3mb",
+      bodySizeLimit: "5mb",
     },
   },
   async headers() {

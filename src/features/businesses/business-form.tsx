@@ -35,6 +35,8 @@ export function BusinessForm({
   const [slug, setSlug] = useState(business?.slug ?? "");
   const [slugEdited, setSlugEdited] = useState(false);
   const [googleReviewUrl, setGoogleReviewUrl] = useState(business?.google_review_url ?? "");
+  const [useBusinessLogoForQr, setUseBusinessLogoForQr] = useState(business?.use_business_logo_for_qr ?? false);
+  const [qrLogoClientError, setQrLogoClientError] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoPreviewFailed, setLogoPreviewFailed] = useState(false);
   const [logoClientError, setLogoClientError] = useState<string | null>(null);
@@ -180,8 +182,9 @@ export function BusinessForm({
 
         <div>
           <label className="block text-sm font-semibold text-slate-800" htmlFor="logo">
-            Logo <span className="font-normal text-slate-400">(optional)</span>
+            Business Logo <span className="font-normal text-slate-400">(optional)</span>
           </label>
+          <p className="mt-2 text-xs text-slate-500">Used on the business review page.</p>
           <label
             className="mt-2 flex min-h-28 cursor-pointer items-center gap-4 rounded-2xl border border-dashed border-slate-300 p-4 transition hover:border-emerald-500 hover:bg-emerald-50/40"
             htmlFor="logo"
@@ -196,7 +199,7 @@ export function BusinessForm({
             )}
             <span>
               <span className="block text-sm font-semibold text-slate-800">
-                {business?.logo_path ? "Replace logo" : "Choose a logo"}
+                {business?.logo_path ? "Replace Business Logo" : "Choose Business Logo"}
               </span>
               <span className="mt-1 block text-xs leading-5 text-slate-500">
                 PNG, JPEG, WebP, HEIC, or HEIF. Maximum 2 MiB.
@@ -213,6 +216,25 @@ export function BusinessForm({
             type="file"
           />
           {logoClientError ? <p className="mt-2 text-sm text-rose-600" role="alert">{logoClientError}</p> : <FieldError errors={state.fieldErrors?.logo} />}
+        </div>
+        <div className="border-t border-slate-200 pt-5">
+          <label className="block text-sm font-semibold text-slate-800" htmlFor="qrLogo">QR Logo (optional)</label>
+          <p className="mt-2 text-xs text-slate-500">Used only inside the QR code.</p>
+          <label className="mt-3 flex min-h-11 items-center gap-3 text-sm text-slate-800">
+            <input type="checkbox" name="useBusinessLogoForQr" checked={useBusinessLogoForQr} onChange={(event) => setUseBusinessLogoForQr(event.target.checked)} />
+            Use Business Logo for QR
+          </label>
+          <input id="qrLogo" name="qrLogo" type="file" disabled={useBusinessLogoForQr}
+            accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
+            className="mt-2 block w-full text-sm text-slate-600 disabled:opacity-50"
+            onChange={(event) => {
+              const error = validateLogoFile(event.currentTarget.files?.[0] ?? null);
+              setQrLogoClientError(error);
+              if (error) event.currentTarget.value = "";
+            }} />
+          <p className="mt-2 text-xs text-slate-500">PNG, JPEG, WebP, HEIC, or HEIF. Maximum 2 MiB.</p>
+          {business?.qr_logo_path ? <label className="mt-3 flex min-h-11 items-center gap-3 text-sm text-slate-800"><input type="checkbox" name="removeQrLogo" />Remove saved QR Logo</label> : null}
+          {qrLogoClientError ? <p className="mt-2 text-sm text-rose-600" role="alert">{qrLogoClientError}</p> : <FieldError errors={state.fieldErrors?.qrLogo} />}
         </div>
       </div>
 

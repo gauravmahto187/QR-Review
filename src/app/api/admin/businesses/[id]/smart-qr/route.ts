@@ -4,8 +4,8 @@ import { z } from "zod";
 import { getBusinessById } from "@/features/businesses/queries";
 import { getAdminAuthState } from "@/lib/auth/admin";
 import { serverEnv } from "@/lib/env/server";
-import { qrDownloadFilename } from "@/lib/qr/filename";
-import { buildBusinessReviewUrl } from "@/lib/urls/business-review";
+import { smartQrFilename } from "@/lib/urls/business-smart";
+import { buildBusinessSmartUrl } from "@/lib/urls/business-smart";
 import { generateQrPng, generateQrSvg, loadQrLogo } from "@/server/services/qr-code";
 
 const idSchema = z.uuid();
@@ -21,9 +21,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { business, supabase } = await getBusinessById(id);
     if (!business) return NextResponse.json({ error: "Business not found." }, { status: 404 });
-    const publicUrl = buildBusinessReviewUrl(business.slug, serverEnv.NEXT_PUBLIC_APP_URL);
+    const publicUrl = buildBusinessSmartUrl(business.slug, serverEnv.NEXT_PUBLIC_APP_URL);
     const logo = await loadQrLogo(supabase, business);
-    const filename = qrDownloadFilename(business.slug, format.data);
+    const filename = smartQrFilename(business.slug, format.data);
     const headers = { "Cache-Control": "private, no-store", "Content-Disposition": `attachment; filename="${filename}"`, "X-Content-Type-Options": "nosniff" };
     if (format.data === "svg") return new NextResponse(await generateQrSvg(publicUrl, logo), { headers: { ...headers, "Content-Type": "image/svg+xml; charset=utf-8" } });
     const png = await generateQrPng(publicUrl, logo);
@@ -32,3 +32,4 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Unable to generate this QR code." }, { status: 500 });
   }
 }
+

@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      business_payment_qrs: {
+        Row: { id: string; business_id: string; name: string; image_path: string; sort_order: number; is_active: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; business_id: string; name: string; image_path: string; sort_order: number; is_active?: boolean; created_at?: string; updated_at?: string };
+        Update: { id?: string; business_id?: string; name?: string; image_path?: string; sort_order?: number; is_active?: boolean; created_at?: string; updated_at?: string };
+        Relationships: [{ foreignKeyName: "business_payment_qrs_business_id_fkey"; columns: ["business_id"]; isOneToOne: false; referencedRelation: "businesses"; referencedColumns: ["id"] }];
+      };
+      legacy_payment_destinations: {
+        Row: { link_id: string; business_id: string; provider: string; destination: string; archived_at: string };
+        Insert: { link_id: string; business_id: string; provider: string; destination: string; archived_at?: string };
+        Update: { link_id?: string; business_id?: string; provider?: string; destination?: string; archived_at?: string };
+        Relationships: [{ foreignKeyName: "legacy_payment_destinations_business_id_fkey"; columns: ["business_id"]; isOneToOne: false; referencedRelation: "businesses"; referencedColumns: ["id"] }];
+      };
+      business_smart_links: {
+        Row: { id: string; business_id: string; type: import("@/features/smart-links/config").SmartLinkType; label: string; url: string | null; image_path: string | null; sort_order: number; is_active: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; business_id: string; type: import("@/features/smart-links/config").SmartLinkType; label?: string; url?: string | null; image_path?: string | null; sort_order: number; is_active?: boolean; created_at?: string; updated_at?: string };
+        Update: { id?: string; business_id?: string; type?: import("@/features/smart-links/config").SmartLinkType; label?: string; url?: string | null; image_path?: string | null; sort_order?: number; is_active?: boolean; created_at?: string; updated_at?: string };
+        Relationships: [{ foreignKeyName: "business_smart_links_business_id_fkey"; columns: ["business_id"]; isOneToOne: false; referencedRelation: "businesses"; referencedColumns: ["id"] }];
+      };
+      smart_link_events: {
+        Row: { id: string; business_id: string; event_type: "SMART_PAGE_VIEW" | "SMART_LINK_CLICK" | "PAYMENT_QR_VIEW" | "PAYMENT_PAGE_VIEW"; payment_method_id: string | null; link_type: import("@/features/smart-links/config").SmartLinkType | null; created_at: string };
+        Insert: { id?: string; business_id: string; event_type: "SMART_PAGE_VIEW" | "SMART_LINK_CLICK" | "PAYMENT_QR_VIEW" | "PAYMENT_PAGE_VIEW"; payment_method_id?: string | null; link_type?: import("@/features/smart-links/config").SmartLinkType | null; created_at?: string };
+        Update: { id?: string; business_id?: string; event_type?: "SMART_PAGE_VIEW" | "SMART_LINK_CLICK" | "PAYMENT_QR_VIEW" | "PAYMENT_PAGE_VIEW"; payment_method_id?: string | null; link_type?: import("@/features/smart-links/config").SmartLinkType | null; created_at?: string };
+        Relationships: [{ foreignKeyName: "smart_link_events_business_id_fkey"; columns: ["business_id"]; isOneToOne: false; referencedRelation: "businesses"; referencedColumns: ["id"] }];
+      };
       admin_profiles: {
         Row: {
           auth_user_id: string;
@@ -107,6 +131,8 @@ export type Database = {
           google_review_url: string;
           id: string;
           logo_path: string | null;
+          qr_logo_path: string | null;
+          use_business_logo_for_qr: boolean;
           name: string;
           primary_color: string | null;
           slug: string;
@@ -120,6 +146,8 @@ export type Database = {
           google_review_url: string;
           id?: string;
           logo_path?: string | null;
+          qr_logo_path?: string | null;
+          use_business_logo_for_qr?: boolean;
           name: string;
           primary_color?: string | null;
           slug: string;
@@ -133,6 +161,8 @@ export type Database = {
           google_review_url?: string;
           id?: string;
           logo_path?: string | null;
+          qr_logo_path?: string | null;
+          use_business_logo_for_qr?: boolean;
           name?: string;
           primary_color?: string | null;
           slug?: string;
@@ -381,6 +411,14 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      apply_payment_qr_action: {
+        Args: { p_business_id: string; p_action: string; p_payment_id: string; p_name?: string; p_image_path?: string; p_is_active?: boolean; p_direction?: string };
+        Returns: string;
+      };
+      apply_smart_link_action: {
+        Args: { p_business_id: string; p_action: string; p_link_id?: string; p_type?: string; p_label?: string; p_url?: string; p_image_path?: string; p_is_active?: boolean; p_direction?: string };
+        Returns: string;
+      };
       apply_review_option_action: {
         Args: {
           p_action: string;
