@@ -14,20 +14,22 @@ export function BusinessLogo({
   size?: "md" | "lg";
   url: string | null;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   const sizing = size === "lg" ? "size-20 rounded-3xl" : "size-12 rounded-2xl";
 
-  if (url && !failed) {
+  if (url && failedUrl !== url) {
     return (
       // Native img lets the browser report unsupported HEIC/HEIF gracefully.
       // eslint-disable-next-line @next/next/no-img-element
       <img
         alt={alt}
-        className={`${sizing} shrink-0 border border-slate-200 bg-white object-cover`}
+        className={`${sizing} shrink-0 border border-slate-200 bg-slate-100 object-cover ${loadedUrl !== url ? "motion-safe:animate-pulse" : ""}`}
         decoding="async"
         height={size === "lg" ? 80 : 48}
         loading="lazy"
-        onError={() => setFailed(true)}
+        onError={() => setFailedUrl(url)}
+        onLoad={() => setLoadedUrl(url)}
         src={url}
         width={size === "lg" ? 80 : 48}
       />

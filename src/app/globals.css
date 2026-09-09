@@ -55,3 +55,7 @@ select {
 .mobile-app-header {
   padding-top: calc(0.75rem + env(safe-area-inset-top));
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin, .animate-pulse, .animate-ping { animation: none; }
+}

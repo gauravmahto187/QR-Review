@@ -1,5 +1,6 @@
 "use client";
 
+import { PendingLabel } from "@/components/loading";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
@@ -12,10 +13,13 @@ const field = "mt-1 min-h-12 w-full rounded-xl border border-slate-300 bg-white 
 const button = "min-h-11 rounded-xl border border-slate-300 px-3 text-sm font-semibold disabled:opacity-40";
 function LinkEditor({ businessId, link, first, last }: { businessId: string; link?: Tables<"business_smart_links">; first?: boolean; last?: boolean }) {
   const [type, setType] = useState<SmartLinkType>(link?.type ?? "FACEBOOK");
+  const [pendingLabel, setPendingLabel] = useState("Saving…");
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   function submit(form: FormData) {
+    if (pending) return;
+    setPendingLabel(form.get("action") === "DELETE" ? "Deleting…" : form.get("action") === "MOVE" ? "Reordering…" : "Saving…");
     setError(undefined);
     startTransition(async () => {
       try {
@@ -40,7 +44,7 @@ function LinkEditor({ businessId, link, first, last }: { businessId: string; lin
         <label className="block text-sm font-medium">Type<select className={field} name="type" value={type} onChange={event => setType(event.target.value as SmartLinkType)}>{SMART_LINK_TYPES.map(type => <option key={type} value={type}>{smartLinkLabels[type]}</option>)}</select></label>
         <label className="block text-sm font-medium">Destination<input className={field} name="url" required maxLength={2048} defaultValue={link?.url ?? ""} placeholder="HTTPS URL, phone number, or email" /></label>
         <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="isActive" defaultChecked={link?.is_active ?? true} className="size-5 accent-emerald-700" />Enabled</label>
-        <button className="min-h-12 w-full rounded-xl bg-emerald-700 px-4 font-semibold text-white" type="submit">{pending ? "Saving…" : link ? "Save changes" : "Add link"}</button>
+        <button className="min-h-12 w-full rounded-xl bg-emerald-700 px-4 font-semibold text-white" type="submit">{pending ? <PendingLabel>{pendingLabel}</PendingLabel> : link ? "Save changes" : "Add link"}</button>
       </fieldset>
     </form>
     {link && <div className="mt-3 flex flex-wrap gap-2">

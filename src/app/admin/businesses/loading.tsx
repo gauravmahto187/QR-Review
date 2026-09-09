@@ -1,3 +1,2 @@
-export default function BusinessesLoading() {
-  return <div className="mx-auto max-w-4xl animate-pulse" aria-label="Loading businesses" role="status"><div className="flex items-center justify-between"><div><div className="h-3 w-32 rounded bg-slate-200" /><div className="mt-3 h-8 w-40 rounded bg-slate-200" /></div><div className="h-11 w-32 rounded-2xl bg-emerald-100" /></div><div className="mt-3 h-4 w-72 max-w-full rounded bg-slate-200" /><div className="mt-6 h-32 rounded-[1.5rem] bg-white shadow-sm sm:h-20" /><div className="mt-6 h-8 w-28 rounded bg-slate-200" /><div className="mt-3 grid gap-3 sm:grid-cols-2">{[0, 1, 2, 3].map((item) => <div className="h-40 rounded-[1.5rem] bg-white shadow-sm" key={item} />)}</div></div>;
-}
+import { AdminSkeleton } from "@/components/loading";
+export default function Loading() { return <AdminSkeleton kind="businesses" />; }

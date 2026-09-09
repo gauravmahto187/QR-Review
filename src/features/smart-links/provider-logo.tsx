@@ -1,4 +1,6 @@
+"use client";
 import { QrCode } from "lucide-react";
+import { useState } from "react";
 
 type ProviderLogo = { src: string; label: string };
 
@@ -18,8 +20,9 @@ export function resolvePaymentProviderLogo(name: string): ProviderLogo | null {
 }
 
 export function PaymentProviderLogo({ name, className = "size-9" }: { name: string; className?: string }) {
+  const [failedSrc, setFailedSrc] = useState<string>();
   const provider = resolvePaymentProviderLogo(name);
-  if (!provider) return <span className={`flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 ${className}`}><QrCode aria-hidden="true" className="size-5" /></span>;
+  if (!provider || failedSrc === provider.src) return <span className={`flex shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 ${className}`}><QrCode aria-hidden="true" className="size-5" /></span>;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={provider.src} alt="" aria-hidden="true" className={`${className} object-contain`} />;
+  return <img src={provider.src} alt="" aria-hidden="true" onError={() => setFailedSrc(provider.src)} className={`${className} shrink-0 object-contain`} />;
 }

@@ -69,7 +69,7 @@ export function BusinessForm({
   const testGoogleMapsUrl = normalizeGoogleMapsUrl(googleReviewUrl);
 
   return (
-    <form action={formAction} className="pb-28 sm:pb-4">
+    <form onReset={event => event.preventDefault()} aria-busy={pending} action={formAction} className="pb-28 sm:pb-4">
       {state.error ? (
         <div className="mb-5 flex gap-3 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700" role="alert">
           <AlertCircle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
@@ -241,7 +241,7 @@ export function BusinessForm({
           type="submit"
         >
           {pending ? <LoaderCircle className="size-5 animate-spin" aria-hidden="true" /> : <Save className="size-5" aria-hidden="true" />}
-          {pending ? "Saving…" : mode === "create" ? "Create business" : "Save changes"}
+          {pending ? mode === "create" ? "Creating…" : "Saving…" : mode === "create" ? "Create business" : "Save changes"}
         </button>
       </div>
     </form>

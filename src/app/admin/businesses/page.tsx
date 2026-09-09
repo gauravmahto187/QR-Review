@@ -1,3 +1,4 @@
+import { ListTransition, ListPendingContent } from "@/components/admin/list-transition";
 import { ArrowRight, Building2, CalendarClock, Plus, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -45,6 +46,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
   }
 
   return (
+    <ListTransition>
     <div className="mx-auto max-w-4xl">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
@@ -78,7 +80,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
         {hasFilters ? <Link className="inline-flex min-h-10 items-center rounded-xl px-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50" href="/admin/businesses">Clear filters</Link> : null}
       </div>
 
-      {businesses.length ? (
+      <ListPendingContent cards>{businesses.length ? (
         <section className="mt-3 grid gap-3 sm:grid-cols-2" aria-label="Business list">
           {businesses.map((business) => {
             const subscription = subscriptions.get(business.id) ?? null;
@@ -109,7 +111,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
           {hasFilters ? <Link className="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white" href="/admin/businesses">Clear filters</Link> : null}
         </section>
       )}
-      <PaginationControls page={page} pageCount={pageCount} hrefForPage={pageHref} />
-    </div>
+      <PaginationControls page={page} pageCount={pageCount} hrefForPage={pageHref} /></ListPendingContent>
+    </div></ListTransition>
   );
 }

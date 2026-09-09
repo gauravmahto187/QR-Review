@@ -3,6 +3,8 @@
 import { ArrowLeft, ArrowRight, Check, ExternalLink, Languages, LoaderCircle, Pencil, RefreshCw, Sparkles, TriangleAlert } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
+import { Skeleton } from "@/components/loading";
+
 import type { PublicGeneration, PublicQuestion, PublicReviewActionState, PublicSession } from "@/features/public-review/types";
 
 async function requestReview(body: Record<string, string>): Promise<PublicReviewActionState> {
@@ -29,8 +31,10 @@ function ActiveReviewFlow({ initialGeneration, initialSession, initialSessionExp
   const [language, setLanguage] = useState<"en" | "ne">(initialSession?.language ?? "en");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [completing, setCompleting] = useState(false);
 
   function runGeneration() {
+    if (pending) return;
     setError(null);
     startTransition(async () => {
       const result = await requestReview({ action: "GENERATE", slug });
@@ -40,6 +44,7 @@ function ActiveReviewFlow({ initialGeneration, initialSession, initialSessionExp
   }
 
   if (generation) return <GeneratedReviewResult error={error} generation={generation} key={generation.generationNumber} onRegenerate={runGeneration} pending={pending} slug={slug} />;
+  if (completing && pending) return <GenerationState error={null} onGenerate={runGeneration} pending />;
   if (session?.completed) return <GenerationState error={error} onGenerate={runGeneration} pending={pending} />;
 
   const onQuestion = step < questions.length;
@@ -77,14 +82,17 @@ function ActiveReviewFlow({ initialGeneration, initialSession, initialSessionExp
   }
 
   function completeAndGenerate() {
+    if (pending) return;
+    setCompleting(true);
     setError(null);
     startTransition(async () => {
       const completed = await requestReview({ action: "COMPLETE", language, slug });
-      if (!completed.session) { setError(completed.error ?? "Please try again."); return; }
+      if (!completed.session) { setCompleting(false); setError(completed.error ?? "Please try again."); return; }
       setSession(completed.session);
       const result = await requestReview({ action: "GENERATE", slug });
       if (result.generation) setGeneration(result.generation);
       else setError(result.error ?? "We couldn’t generate your review.");
+      setCompleting(false);
     });
   }
 
@@ -98,7 +106,7 @@ function ActiveReviewFlow({ initialGeneration, initialSession, initialSessionExp
 }
 
 function GenerationState({ error, onGenerate, pending }: { error: string | null; onGenerate: () => void; pending: boolean }) {
-  if (pending) return <div className="mt-8 rounded-[1.75rem] bg-emerald-50 p-7 text-center" aria-live="polite"><span className="relative mx-auto flex size-16 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm"><Sparkles className="size-7 animate-pulse" /><span className="absolute inset-0 animate-ping rounded-full border border-emerald-400/30" /></span><h2 className="mt-5 text-xl font-semibold text-emerald-950">Generating your review…</h2><p className="mt-2 text-sm leading-6 text-emerald-900/70">We’re turning your answers into a concise, natural review. This can take a few moments.</p></div>;
+  if (pending) return <section className="mt-8 min-h-80 space-y-6 rounded-3xl border border-slate-200 bg-slate-50 p-6" aria-busy="true"><h2 role="status" className="text-xl font-semibold text-slate-950">Generating your review…</h2><div aria-hidden="true" className="space-y-4"><Skeleton /><Skeleton /><Skeleton className="h-4 w-5/6" /><Skeleton /><Skeleton className="h-4 w-2/3" /></div></section>;
   return <div className="mt-8 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 text-center"><Sparkles className="mx-auto size-7 text-emerald-700" /><h2 className="mt-4 text-xl font-semibold text-slate-950">Your answers are ready</h2><p className="mt-2 text-sm leading-6 text-slate-600">Generate your review when you’re ready.</p>{error ? <ErrorMessage message={error} /> : null}<button className="mt-5 min-h-13 w-full rounded-2xl bg-emerald-700 px-5 text-sm font-semibold text-white" onClick={onGenerate} type="button">Try generating again</button></div>;
 }
 
@@ -108,7 +116,7 @@ function GeneratedReviewResult({ error, generation, onRegenerate, pending, slug 
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [handoffPending, startHandoffTransition] = useTransition();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  if (pending) return <GenerationState error={null} onGenerate={onRegenerate} pending />;
+
 
   async function copyReviewText() {
     if (!text.trim()) return false;
@@ -127,6 +135,7 @@ function GeneratedReviewResult({ error, generation, onRegenerate, pending, slug 
   }
 
   function openGoogleMaps() {
+    if (handoffPending || pending) return;
     setHandoffError(null);
     setFallbackUrl(null);
     if (!text.trim()) { setHandoffError("Write at least one character before continuing."); return; }
@@ -145,8 +154,8 @@ function GeneratedReviewResult({ error, generation, onRegenerate, pending, slug 
 
   return <div className="mt-7"><div className="flex items-center gap-3"><span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><Check className="size-5" /></span><div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Your review is ready</p><h2 className="mt-1 text-xl font-semibold text-slate-950">Make it sound like you</h2></div></div><p className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500"><Languages className="size-4" />{generation.language === "ne" ? "Nepali" : "English"} · Version {generation.generationNumber} of 2</p>
     <label className="mt-5 block text-sm font-semibold text-slate-700" htmlFor="generated-review"><span className="inline-flex items-center gap-2"><Pencil className="size-4" />Edit your review</span></label><textarea className="mt-2 min-h-52 w-full resize-y rounded-2xl border border-slate-200 bg-white p-4 text-base leading-7 text-slate-800 shadow-inner outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10" id="generated-review" maxLength={1200} onChange={(event) => { setText(event.target.value); setFallbackUrl(null); }} ref={textareaRef} value={text} /><p className="mt-2 text-xs leading-5 text-slate-400">Edit freely. We’ll copy this text before opening Google Maps.</p>{error ? <ErrorMessage message={error} /> : null}
-    {generation.canRegenerate ? <button className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={handoffPending} onClick={onRegenerate} type="button"><RefreshCw className="size-4" />Regenerate another version</button> : <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-center text-sm text-slate-500">You’ve used the available regeneration. You can still edit this version.</p>}
-    <div className="sticky -bottom-5 z-10 mt-5 border-t border-slate-100 bg-white/95 py-4 backdrop-blur"><button className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 text-base font-semibold text-white shadow-lg shadow-emerald-900/10 disabled:opacity-60" disabled={handoffPending} onClick={openGoogleMaps} type="button">{handoffPending ? <LoaderCircle className="size-5 animate-spin" /> : <ExternalLink className="size-5" />}Open Google Maps</button></div>
+    {generation.canRegenerate ? <button className="mt-5 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 disabled:opacity-50" disabled={handoffPending || pending} onClick={onRegenerate} type="button">{pending ? <LoaderCircle aria-hidden="true" className="size-4 motion-safe:animate-spin" /> : <RefreshCw className="size-4" />}{pending ? "Generating another version…" : "Regenerate another version"}</button> : <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-center text-sm text-slate-500">You’ve used the available regeneration. You can still edit this version.</p>}
+    <div className="sticky -bottom-5 z-10 mt-5 border-t border-slate-100 bg-white/95 py-4 backdrop-blur"><button className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-4 text-base font-semibold text-white shadow-lg shadow-emerald-900/10 disabled:opacity-60" disabled={handoffPending || pending} onClick={openGoogleMaps} type="button">{handoffPending ? <LoaderCircle className="size-5 animate-spin" /> : <ExternalLink className="size-5" />}{handoffPending ? "Opening…" : "Open Google Maps"}</button></div>
     {handoffError ? <p className="mt-3 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800" role="alert">{handoffError}</p> : null}
     {fallbackUrl ? <a className="mt-3 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-amber-300 bg-white px-5 text-sm font-semibold text-amber-900" href={fallbackUrl}><ExternalLink className="size-4" />Open Google Maps</a> : null}
   </div>;

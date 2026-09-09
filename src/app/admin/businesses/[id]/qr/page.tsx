@@ -1,5 +1,5 @@
 import { ArrowLeft, Info, QrCode } from "lucide-react";
-import Image from "next/image";
+import { LoadingImage } from "@/components/loading-image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -34,7 +34,7 @@ export default async function BusinessQrPage({ params }: { params: Promise<{ id:
   return <div className="mx-auto max-w-2xl pb-8">
     <Link className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950" href={`/admin/businesses/${business.id}`}><ArrowLeft className="size-5" /> Business</Link>
     <header className="mt-3 flex items-center gap-4"><BusinessLogo alt={business.name} color={business.primary_color} size="md" url={getBusinessLogoUrl(supabase, business.logo_path)} /><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">NexGen Digital</p><h1 className="mt-1 truncate text-2xl font-semibold tracking-tight text-slate-950">{business.name}</h1></div></header>
-    <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-5 text-center shadow-sm sm:p-8"><div className="mx-auto flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><QrCode className="size-6" /></div><h2 className="mt-3 text-xl font-semibold text-slate-950">Permanent review QR</h2><div className="mx-auto mt-5 w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-4"><Image alt={`QR code for ${business.name}`} className="h-auto w-full" height={1024} priority src={previewUrl} unoptimized width={1024} /></div></section>
+    <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-5 text-center shadow-sm sm:p-8"><div className="mx-auto flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><QrCode className="size-6" /></div><h2 className="mt-3 text-xl font-semibold text-slate-950">Permanent review QR</h2><div className="mx-auto mt-5 w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-4"><LoadingImage alt={`QR code for ${business.name}`} src={previewUrl} /></div></section>
     <section className="mt-5 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><QrLinkControls businessId={business.id} publicUrl={publicUrl} slug={business.slug} /></section>
   </div>;
 }

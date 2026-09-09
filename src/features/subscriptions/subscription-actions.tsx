@@ -32,8 +32,8 @@ export function SubscriptionActions({
   current: Subscription | null;
   hasHistory: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(applySubscriptionAction, initialState);
   const [selected, setSelected] = useState<Selection | null>(null);
+  const [state, formAction, pending] = useActionState(async (previous: SubscriptionActionState, form: FormData) => { try { const result = await applySubscriptionAction(previous, form); if (!result.error) setSelected(null); return result; } catch { return { error: "Unable to update subscription. Please try again." }; } }, initialState);
   const [customDate, setCustomDate] = useState("");
   const timing = getSubscriptionTiming(current);
   const canExtend = current && ["TRIAL", "ACTIVE"].includes(current.status) && !timing.isExpired;
@@ -87,13 +87,13 @@ export function SubscriptionActions({
       {selected ? (
         <div className="fixed inset-0 z-50 flex items-end bg-slate-950/45 p-3 sm:items-center sm:justify-center" role="presentation">
           <section aria-labelledby="subscription-dialog-title" aria-modal="true" className="w-full rounded-[1.75rem] bg-white p-5 shadow-2xl sm:max-w-md" role="dialog">
-            <div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold text-slate-950" id="subscription-dialog-title">{selected.label}?</h2><p className="mt-2 text-sm leading-6 text-slate-600">This creates a new current subscription record and retains the previous record in history.</p></div><button aria-label="Close confirmation" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100" onClick={() => setSelected(null)} type="button"><X className="size-5" /></button></div>
-            <form action={formAction} className="mt-6 grid gap-3 sm:grid-cols-2" onSubmit={() => setSelected(null)}>
+            <div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold text-slate-950" id="subscription-dialog-title">{selected.label}?</h2><p className="mt-2 text-sm leading-6 text-slate-600">This creates a new current subscription record and retains the previous record in history.</p></div><button aria-label="Close confirmation" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100" disabled={pending} onClick={() => setSelected(null)} type="button"><X className="size-5" /></button></div>
+            {state.error && <p role="alert" className="mt-3 text-sm text-rose-700">{state.error}</p>}<form aria-busy={pending} action={formAction} className="mt-6 grid gap-3 sm:grid-cols-2">
               <input name="action" type="hidden" value={selected.action} /><input name="businessId" type="hidden" value={businessId} />
               {selected.months ? <input name="months" type="hidden" value={selected.months} /> : null}
               {selected.action === "SET_CUSTOM_EXPIRY" ? <input name="customDate" type="hidden" value={customDate} /> : null}
-              <button className="min-h-12 rounded-2xl border border-slate-300 px-4 text-sm font-semibold text-slate-700" onClick={() => setSelected(null)} type="button">Go back</button>
-              <button className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white ${["CANCEL", "SUSPEND"].includes(selected.action) ? "bg-rose-700" : "bg-emerald-700"}`} disabled={pending} type="submit">{pending ? <LoaderCircle className="size-5 animate-spin" /> : null}{pending ? "Updating…" : "Confirm"}</button>
+              <button className="min-h-12 rounded-2xl border border-slate-300 px-4 text-sm font-semibold text-slate-700" disabled={pending} onClick={() => setSelected(null)} type="button">Go back</button>
+              <button className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white ${["CANCEL", "SUSPEND"].includes(selected.action) ? "bg-rose-700" : "bg-emerald-700"}`} disabled={pending} type="submit">{pending ? <LoaderCircle className="size-5 animate-spin" /> : null}{pending ? selected.action === "SUSPEND" ? "Suspending…" : selected.action === "REACTIVATE" ? "Reactivating…" : selected.action === "CANCEL" ? "Cancelling…" : canExtend ? "Extending…" : "Activating…" : "Confirm"}</button>
             </form>
           </section>
         </div>
