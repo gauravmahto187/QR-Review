@@ -2,6 +2,7 @@ import { Building2, CircleOff } from "lucide-react";
 
 import { BusinessLogo } from "@/features/businesses/business-logo";
 import { BrandLogo } from "@/components/brand-logo";
+import { DeveloperCredit } from "@/components/developer-credit";
 import { getBusinessLogoUrl } from "@/features/businesses/storage";
 import { PageViewTracker } from "@/features/public-review/page-view-tracker";
 import { PublicReviewFlow } from "@/features/public-review/public-review-flow";
@@ -43,7 +44,7 @@ export default async function PublicReviewPage({ params }: { params: Promise<{ s
     <section className="mx-auto min-h-[calc(100dvh-2.5rem)] w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-40px_rgba(15,23,42,0.35)] sm:min-h-0 sm:p-7">
       <header className="text-center"><div className="flex justify-center"><BusinessLogo alt={resolved.business.name} color={resolved.business.primary_color} size="lg" url={page.logoUrl} /></div><p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Share your experience</p><h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{resolved.business.name}</h1><p className="mt-2 text-sm leading-6 text-slate-500">Your feedback helps us improve.</p></header>
       <PublicReviewFlow initialGeneration={page.generation} initialSession={page.existing ? publicSessionFromRow(page.existing) : null} initialSessionExpired={page.sessionExpired ?? false} questions={resolved.questions} slug={slug} />
-      <footer className="mt-8 border-t border-slate-100 pt-4 text-center text-[0.7rem] text-slate-400"><BrandLogo className="mx-auto h-5 w-20 opacity-60" /><span className="mt-1 inline-flex items-center gap-1.5"><Building2 className="size-3.5" />Powered by NexGen Digital</span></footer>
+      <footer className="mt-8 border-t border-slate-100 pt-4 text-center text-[0.7rem] text-slate-400"><BrandLogo className="mx-auto h-5 w-20 opacity-60" /><span className="mt-1 inline-flex items-center gap-1.5"><Building2 className="size-3.5" />Powered by NexGen Digital</span><br /><DeveloperCredit /></footer>
     </section>
   </main>;
 }

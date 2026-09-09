@@ -4,7 +4,7 @@ export function DeveloperCredit() {
   return (
     <a
       aria-label="Developed by Gaurav — open portfolio"
-      className="developer-credit group fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-3 z-40 inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/95 px-2.5 py-1.5 text-[0.68rem] font-medium text-slate-600 shadow-sm backdrop-blur transition hover:border-emerald-300 hover:text-emerald-700 hover:shadow-md sm:right-5"
+      className="developer-credit group mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/95 px-2.5 py-1.5 text-[0.68rem] font-medium text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-700 hover:shadow-md"
       href="https://gaurav-gules.vercel.app/"
       rel="noreferrer"
       target="_blank"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CircleOff } from "lucide-react";
 import { BusinessLogo } from "@/features/businesses/business-logo";
 import { BrandLogo } from "@/components/brand-logo";
+import { DeveloperCredit } from "@/components/developer-credit";
 import { getBusinessLogoUrl } from "@/features/businesses/storage";
 import { PublicSmartLinks } from "@/features/smart-links/public-links";
 import { resolveSmartLinks } from "@/server/services/smart-links";
@@ -18,6 +19,6 @@ export default async function SmartLinksPage({ params }: { params: Promise<{ slu
   return <main className="min-h-dvh bg-slate-50 px-4 py-7 sm:px-5 sm:py-8"><div className="mx-auto w-full max-w-[460px]">
     <header className="text-center"><div className="flex justify-center"><div className="scale-[0.88]"><BusinessLogo alt={business.name} color={business.primary_color} size="lg" url={getBusinessLogoUrl(supabase, business.logo_path)} /></div></div><h1 className="mt-1 break-words text-[1.65rem] font-semibold leading-tight tracking-tight text-slate-950">{business.name}</h1></header>
     <PublicSmartLinks hasPayments={resolved.payments.length > 0} slug={slug} links={links.map(({ id, type }) => ({ id, type }))} />
-    <footer className="mt-8 text-center text-[0.7rem] text-slate-400"><BrandLogo className="mx-auto h-5 w-20 opacity-60" /><span className="mt-1 block">Powered by NexGen Digital</span></footer>
+    <footer className="mt-8 text-center text-[0.7rem] text-slate-400"><BrandLogo className="mx-auto h-5 w-20 opacity-60" /><span className="mt-1 block">Powered by NexGen Digital</span><DeveloperCredit /></footer>
   </div></main>;
 }
