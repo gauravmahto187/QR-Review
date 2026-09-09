@@ -56,6 +56,11 @@ select {
   padding-top: calc(0.75rem + env(safe-area-inset-top));
 }
 
+.developer-credit {
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   .animate-spin, .animate-pulse, .animate-ping { animation: none; }
 }

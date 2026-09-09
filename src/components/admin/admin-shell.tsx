@@ -31,7 +31,7 @@ export function AdminShell({
   const initial = displayName.trim().charAt(0).toUpperCase() || "A";
 
   return (
-    <div className="min-h-dvh bg-slate-50 text-slate-950 md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
+    <div className="admin-shell min-h-dvh bg-slate-50 text-slate-950 md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="hidden border-r border-slate-200 bg-white md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:p-5">
         <div className="flex items-center gap-3 px-2 py-2">
           <BrandLogo className="h-9 w-[7.2rem]" />
