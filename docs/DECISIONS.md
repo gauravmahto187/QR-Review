@@ -44,7 +44,7 @@ This is the V1 decision log. Changes should be recorded here before architecture
 35. The mobile admin shell uses Home, Businesses, Activity, and More bottom navigation; desktop progressively enhances this to a sidebar.
 36. Home focuses on aggregate metrics, trends, and subscription alerts. Activity contains the protected privacy-safe recent event feed, and More contains account/logout controls. No production analytics are fabricated.
 37. Business management is mobile-first and uses cards rather than desktop tables. It includes server-side search/filter reads, create/edit/detail routes, secure logo management, and confirmed lifecycle actions.
-38. Business archiving is a terminal soft-delete state in the admin application. There is no hard-delete action and archived businesses are retained for history.
+38. Business removal is a permanent delete action in the admin application. It requires typing the business name, removes related operational records and uploaded files, and retains only the deletion cleanup manifest until storage cleanup completes.
 39. All business reads use the authenticated RLS client. Every mutation requires server-side admin authorization and writes the applicable audit event.
 40. Subscription lifecycle changes append a new current record and retain prior records as read-only history. The previous record is changed only to clear its technical `is_current` marker.
 41. A seven-day trial is available only before any subscription history exists for the business.

@@ -1,4 +1,5 @@
 import { ListTransition, ListPendingContent } from "@/components/admin/list-transition";
+import { PendingDeletionCleanup } from "@/features/businesses/pending-deletion-cleanup";
 import { ArrowRight, Building2, CalendarClock, Plus, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -80,6 +81,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
         {hasFilters ? <Link className="inline-flex min-h-10 items-center rounded-xl px-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50" href="/admin/businesses">Clear filters</Link> : null}
       </div>
 
+      <PendingDeletionCleanup />
       <ListPendingContent cards>{businesses.length ? (
         <section className="mt-3 grid gap-3 sm:grid-cols-2" aria-label="Business list">
           {businesses.map((business) => {

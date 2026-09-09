@@ -39,7 +39,7 @@ Runtime validity always compares `expires_at` with the current UTC time. A row w
 ## Integrity and deletion
 
 - UUID primary keys and foreign keys are used throughout.
-- Businesses are archived in normal operation; history-bearing relationships restrict physical deletion.
+- Businesses can be permanently deleted by an administrator after explicit name confirmation. Related records are removed in one transaction and uploaded objects are cleaned up through a retryable manifest.
 - Question options cascade with questions, and questions cascade if a business is deliberately removed.
 - Generation and analytics session/business composite foreign keys prevent mismatched business identifiers.
 - Generation number is constrained to 1 or 2; regeneration count is constrained to 0 or 1.
@@ -92,7 +92,7 @@ All application tables have RLS enabled. Anonymous database access is revoked. A
 
 ## Business lifecycle and audit
 
-Business slugs have a database unique constraint and are treated as immutable after creation by the application. `ARCHIVED` rows require `archived_at`; active and suspended rows require it to be null. The admin application exposes no physical delete operation. Business management records `BUSINESS_CREATED`, `BUSINESS_UPDATED`, `GOOGLE_REVIEW_URL_CHANGED`, `BUSINESS_LOGO_CHANGED`, `BUSINESS_SUSPENDED`, `BUSINESS_REACTIVATED`, and `BUSINESS_ARCHIVED` events in `audit_logs`.
+Business slugs have a database unique constraint and are treated as immutable after creation by the application. `ARCHIVED` rows require `archived_at`; active and suspended rows require it to be null. Permanent deletion is admin-only, confirmation-protected, and removes related rows plus uploaded objects. Business management records `BUSINESS_CREATED`, `BUSINESS_UPDATED`, `GOOGLE_REVIEW_URL_CHANGED`, `BUSINESS_LOGO_CHANGED`, `BUSINESS_SUSPENDED`, and `BUSINESS_REACTIVATED` events in `audit_logs`.
 
 Subscription management records `SUBSCRIPTION_TRIAL_STARTED`, `SUBSCRIPTION_ACTIVATED`, `SUBSCRIPTION_EXTENDED`, `SUBSCRIPTION_CUSTOM_EXPIRY_SET`, `SUBSCRIPTION_SUSPENDED`, `SUBSCRIPTION_REACTIVATED`, and `SUBSCRIPTION_CANCELLED`. Metadata contains only operational fields such as plan, status, duration, timestamps, and previous subscription identifiers.
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { Archive, LoaderCircle, PauseCircle, PlayCircle, X } from "lucide-react";
+import { LoaderCircle, PauseCircle, PlayCircle, X } from "lucide-react";
+import { DeleteBusinessButton } from "./delete-business-button";
 import { useActionState, useState } from "react";
 
 import {
@@ -14,20 +15,22 @@ const initialState: BusinessStatusState = {};
 
 export function BusinessStatusActions({
   businessId,
+  businessName,
   status,
 }: {
   businessId: string;
+  businessName: string;
   status: BusinessStatus;
 }) {
   const [selected, setSelected] = useState<BusinessStatus | null>(null);
   const [state, action, pending] = useActionState(changeBusinessStatusAction, initialState);
 
   if (status === "ARCHIVED") {
-    return <p className="text-sm leading-6 text-slate-500">Archived businesses are retained for history and cannot be reactivated.</p>;
+    return <DeleteBusinessButton businessId={businessId} businessName={businessName} />;
   }
 
   const target = selected;
-  const label = target === "ARCHIVED" ? "Archive" : target === "SUSPENDED" ? "Suspend" : "Reactivate";
+  const label = target === "SUSPENDED" ? "Suspend" : "Reactivate";
 
   return (
     <>
@@ -43,9 +46,7 @@ export function BusinessStatusActions({
             <PlayCircle className="size-5" aria-hidden="true" /> Reactivate
           </button>
         )}
-        <button className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700" onClick={() => setSelected("ARCHIVED")} type="button">
-          <Archive className="size-5" aria-hidden="true" /> Archive
-        </button>
+        <DeleteBusinessButton businessId={businessId} businessName={businessName} />
       </div>
 
       {target ? (
@@ -55,9 +56,7 @@ export function BusinessStatusActions({
               <div>
                 <h2 className="text-xl font-semibold text-slate-950" id="status-dialog-title">{label} business?</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {target === "ARCHIVED"
-                    ? "This removes the business from active use and cannot be undone from the admin app. Its history remains stored."
-                    : target === "SUSPENDED"
+                  {target === "SUSPENDED"
                       ? "The business remains stored but is marked unavailable until reactivated."
                       : "The business will return to active status."}
                 </p>
@@ -68,7 +67,7 @@ export function BusinessStatusActions({
               <input name="businessId" type="hidden" value={businessId} />
               <input name="status" type="hidden" value={target} />
               <button className="min-h-12 rounded-2xl border border-slate-300 px-4 text-sm font-semibold text-slate-700" onClick={() => setSelected(null)} type="button">Cancel</button>
-              <button className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white ${target === "ARCHIVED" ? "bg-rose-700" : "bg-emerald-700"}`} disabled={pending} type="submit">
+              <button className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold text-white bg-emerald-700`} disabled={pending} type="submit">
                 {pending ? <LoaderCircle className="size-5 animate-spin" /> : null}
                 {pending ? "Updating…" : `Yes, ${label.toLowerCase()}`}
               </button>

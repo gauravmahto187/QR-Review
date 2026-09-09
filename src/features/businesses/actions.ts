@@ -256,8 +256,8 @@ export async function updateBusinessAction(
 }
 
 function allowedStatusTransition(current: BusinessStatus, next: BusinessStatus) {
-  if (current === "ACTIVE") return next === "SUSPENDED" || next === "ARCHIVED";
-  if (current === "SUSPENDED") return next === "ACTIVE" || next === "ARCHIVED";
+  if (current === "ACTIVE") return next === "SUSPENDED";
+  if (current === "SUSPENDED") return next === "ACTIVE";
   return false;
 }
 
@@ -271,7 +271,7 @@ export async function changeBusinessStatusAction(
 
   if (
     typeof businessId !== "string" || !z.uuid().safeParse(businessId).success ||
-    !["ACTIVE", "SUSPENDED", "ARCHIVED"].includes(String(nextStatus))
+    !["ACTIVE", "SUSPENDED"].includes(String(nextStatus))
   ) {
     return { error: "Invalid status request." };
   }
@@ -293,19 +293,14 @@ export async function changeBusinessStatusAction(
   const { error: updateError } = await supabase
     .from("businesses")
     .update({
-      archived_at: status === "ARCHIVED" ? new Date().toISOString() : null,
+      archived_at: null,
       status,
     })
     .eq("id", businessId);
 
   if (updateError) return { error: "Unable to change business status." };
 
-  const action =
-    status === "ARCHIVED"
-      ? "BUSINESS_ARCHIVED"
-      : status === "SUSPENDED"
-        ? "BUSINESS_SUSPENDED"
-        : "BUSINESS_REACTIVATED";
+  const action = status === "SUSPENDED" ? "BUSINESS_SUSPENDED" : "BUSINESS_REACTIVATED";
 
   await writeBusinessAudit(supabase, admin.auth_user_id, businessId, [
     { action, metadata: { from: current.status, to: status } },

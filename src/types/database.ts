@@ -9,6 +9,12 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      business_deletion_cleanup: {
+        Row: { business_id: string; business_name: string; slug: string; objects: Json; created_at: string };
+        Insert: { business_id: string; business_name: string; slug: string; objects: Json; created_at?: string };
+        Update: { objects?: Json };
+        Relationships: [];
+      };
       business_payment_qrs: {
         Row: { id: string; business_id: string; name: string; image_path: string; sort_order: number; is_active: boolean; created_at: string; updated_at: string };
         Insert: { id?: string; business_id: string; name: string; image_path: string; sort_order: number; is_active?: boolean; created_at?: string; updated_at?: string };
@@ -411,6 +417,8 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      delete_business_permanently: { Args: { p_business_id: string; p_confirmation: string }; Returns: Json };
+      complete_business_deletion: { Args: { p_business_id: string }; Returns: undefined };
       apply_payment_qr_action: {
         Args: { p_business_id: string; p_action: string; p_payment_id: string; p_name?: string; p_image_path?: string; p_is_active?: boolean; p_direction?: string };
         Returns: string;
