@@ -7,9 +7,16 @@ export class MockProvider implements ReviewProvider {
 
   async generate(input: GenerateReviewInput) {
     const highlights = input.answers.map((answer) => answer.optionLabel).join(", ");
+    const style = input.style ?? "conversational";
     const text = input.language === "ne"
-      ? `${input.businessName} सँगको मेरो अनुभव उल्लेख गर्न लायक रह्यो। विशेष गरी ${highlights} पक्षहरू मन परे। समग्र प्रक्रिया सहज र व्यवस्थित महसुस भयो। यस्तै सेवा खोजिरहनुभएका अरूलाई पनि मेरो अनुभव उपयोगी हुन सक्छ।`
-      : `My experience with ${input.businessName} was worth sharing. What stood out most was ${highlights}. The overall process felt smooth and thoughtfully handled from beginning to end. I hope this helps others understand what they can expect from the business.`;
+      ? style === "recommendation-led"
+        ? `${highlights} पक्षहरूका कारण ${input.businessName} को अनुभव राम्रो लाग्यो। यस्तै कुरा खोज्नेहरूका लागि यो ठाउँ विचार गर्न सकिन्छ।`
+        : `${input.businessName} मा ${highlights} कुरा मन परे। समग्र अनुभव सहज र स्वाभाविक लाग्यो, त्यसैले यो अनुभव साझा गर्न मन लाग्यो।`
+      : style === "concise"
+        ? `${input.businessName} मा ${highlights} कुरा विशेष लाग्यो। समग्र अनुभव सहज रह्यो।`
+        : style === "recommendation-led"
+          ? `${input.businessName} मा ${highlights} कुरा मन परे। यस्तै अनुभव चाहनेहरूका लागि यो ठाउँ विचार गर्न सकिन्छ।`
+          : `What stood out at ${input.businessName} was ${highlights}. The experience felt smooth and natural, so I wanted to share it.`;
     return { model: this.model, provider: this.name, text: normalizeReviewOutput(text) };
   }
 }

@@ -9,6 +9,7 @@ import { getReviewProvider } from "@/server/ai";
 import { AIProviderError } from "@/server/ai/errors";
 import { PROMPT_VERSION } from "@/server/ai/prompt";
 import type { GenerateReviewInput } from "@/server/ai/types";
+import type { ReviewStyle } from "@/server/ai/types";
 import { loadExistingPublicSession, resolvePublicReview } from "@/server/services/public-review";
 
 function providerFailure(error: unknown) {
@@ -78,10 +79,16 @@ export async function generatePublicReview(slug: string): Promise<{ error?: stri
     }
     generationId = reservation[0].generation_id;
     const generationNumber = reservation[0].generation_number as 1 | 2;
+    const styles: ReviewStyle[] = ["conversational", "warm", "experience-led", "neutral", "recommendation-led", "concise"];
+    const style = styles[(generationNumber - 1) % styles.length];
+    const { data: previous } = generationNumber === 2
+      ? await supabase.from("review_generations").select("generated_text").eq("session_id", context.session.id).eq("status", "SUCCEEDED").order("generation_number", { ascending: false }).limit(1).maybeSingle()
+      : { data: null };
+    const generationInput: GenerateReviewInput = { ...context.input, style, previousReview: previous?.generated_text ?? undefined };
 
     let generated;
     try {
-      generated = await provider.generate(context.input);
+      generated = await provider.generate(generationInput);
     } catch (error) {
       const failure = providerFailure(error);
       logger.warn("review_generation.provider_failed", { code: failure.code, durationMs: Math.round(performance.now() - startedAt), model: provider.model, provider: provider.name });

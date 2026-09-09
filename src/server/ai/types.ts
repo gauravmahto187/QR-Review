@@ -11,7 +11,11 @@ export type GenerateReviewInput = {
   businessName: string;
   language: ReviewLanguage;
   promptVersion: string;
+  style?: ReviewStyle;
+  previousReview?: string;
 };
+
+export type ReviewStyle = "concise" | "conversational" | "warm" | "neutral" | "experience-led" | "recommendation-led";
 
 export type GeneratedReview = {
   model: string;
