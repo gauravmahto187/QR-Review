@@ -15,14 +15,12 @@ export async function deleteBusinessAction(_state: DeleteBusinessState, form: Fo
   let deleted = false;
   try {
     await requireAdmin();
-    const input = z.object({ businessId: z.uuid(), confirmation: z.string().min(1).max(160) })
-      .safeParse({ businessId: form.get("businessId"), confirmation: form.get("confirmation") });
-    if (!input.success) return { error: "Enter the business name to confirm deletion." };
-    const { businessId, confirmation } = input.data;
+    const input = z.object({ businessId: z.uuid() }).safeParse({ businessId: form.get("businessId") });
+    if (!input.success) return { error: "Business not found." };
+    const { businessId } = input.data;
     const client = await createServerSupabaseClient();
-    const { data, error } = await client.rpc("delete_business_permanently", { p_business_id: businessId, p_confirmation: confirmation });
+    const { data, error } = await client.rpc("delete_business_permanently", { p_business_id: businessId });
     if (error) {
-      if (error.message.includes("CONFIRMATION_MISMATCH")) return { error: "The business name does not match." };
       if (error.code === "PGRST202") return { error: "Business deletion is not available yet. Apply the deletion migration first." };
       return { error: "Unable to delete this business. Please try again." };
     }

@@ -417,7 +417,7 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
-      delete_business_permanently: { Args: { p_business_id: string; p_confirmation: string }; Returns: Json };
+      delete_business_permanently: { Args: { p_business_id: string }; Returns: Json };
       complete_business_deletion: { Args: { p_business_id: string }; Returns: undefined };
       apply_payment_qr_action: {
         Args: { p_business_id: string; p_action: string; p_payment_id: string; p_name?: string; p_image_path?: string; p_is_active?: boolean; p_direction?: string };

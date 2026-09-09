@@ -31,19 +31,14 @@ begin
   insert into public.audit_logs(admin_user_id,business_id,action,entity_type) values(v_admin,v_id,'TEST','business');
   perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
   begin
-    perform public.delete_business_permanently(v_id,'Deletion fixture');
+    perform public.delete_business_permanently(v_id);
     raise exception 'Unauthorized deletion succeeded';
   exception when insufficient_privilege then null;
   end;
   perform set_config('request.jwt.claim.sub',v_admin::text,true);
-  begin
-    perform public.delete_business_permanently(v_id,'Wrong name');
-    raise exception 'Wrong confirmation succeeded';
-  exception when invalid_parameter_value then null;
-  end;
   insert into public._business_deletion_test_blocker values(v_id);
   begin
-    perform public.delete_business_permanently(v_id,'Deletion fixture');
+    perform public.delete_business_permanently(v_id);
     raise exception 'Blocked deletion succeeded';
   exception when foreign_key_violation then null;
   end;
@@ -53,7 +48,7 @@ begin
     raise exception 'Deletion was not atomic';
   end if;
   delete from public._business_deletion_test_blocker where business_id=v_id;
-  v_result := public.delete_business_permanently(v_id,'Deletion fixture');
+  v_result := public.delete_business_permanently(v_id);
   if exists(select 1 from public.businesses where id=v_id)
     or exists(select 1 from public.subscriptions where business_id=v_id)
     or exists(select 1 from public.review_sessions where business_id=v_id)
@@ -69,10 +64,10 @@ begin
     raise exception 'Related business data remains';
   end if;
   if not exists(select 1 from public.businesses where id=v_other) then raise exception 'Unrelated business deleted'; end if;
-  perform public.delete_business_permanently(v_id,'Deletion fixture'); -- idempotent cleanup retry
+  perform public.delete_business_permanently(v_id); -- idempotent cleanup retry
   perform public.complete_business_deletion(v_id);
   if exists(select 1 from public.business_deletion_cleanup where business_id=v_id) then raise exception 'Cleanup job remains'; end if;
-  if has_function_privilege('anon','public.delete_business_permanently(uuid,text)','EXECUTE') then raise exception 'Anonymous execute allowed'; end if;
+  if has_function_privilege('anon','public.delete_business_permanently(uuid)','EXECUTE') then raise exception 'Anonymous execute allowed'; end if;
 end;
 $$;
 select 'PASS: admin gate, confirmation, atomic rollback, archived deletion, all related data, business isolation, cleanup retry' as result;

@@ -1,6 +1,6 @@
 import { ArrowLeft, BarChart3, CalendarClock, ExternalLink, Link2, ListChecks, Pencil, QrCode } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { BusinessLogo } from "@/features/businesses/business-logo";
 import { BusinessStatusActions } from "@/features/businesses/business-status-actions";
 import { getBusinessById } from "@/features/businesses/queries";
@@ -23,7 +23,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
   await requireAdminPage();
   const { id } = await params;
   const { business, supabase } = await getBusinessById(id);
-  if (!business) notFound();
+  if (!business) redirect("/admin/businesses");
   const smartLinks = await getSmartLinksAdmin(business.id);
   const [subscriptions, questionSummary, recentAnalytics] = await Promise.all([getCurrentSubscriptionsByBusinessIds([business.id]), getQuestionSummary(business.id), getBusinessAnalytics(business.id, getAnalyticsDateRange({ range: "30d" }))]);
   const subscription = subscriptions.get(business.id) ?? null;
