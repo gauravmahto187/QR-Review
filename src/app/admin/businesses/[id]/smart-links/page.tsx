@@ -22,7 +22,7 @@ export default async function SmartLinksAdminPage({ params }: { params: Promise<
       <h2 className="font-semibold">Smart Links analytics <span className="text-sm font-normal text-slate-500">· All time</span></h2>
       <div className="mt-4 grid grid-cols-2 gap-3"><div><p className="text-2xl font-semibold">{metrics.views}</p><p className="text-sm text-slate-500">Smart QR page views</p></div><div><p className="text-2xl font-semibold">{metrics.clicks}</p><p className="text-sm text-slate-500">Link clicks</p></div></div>
       <dl className="mt-4 space-y-2 text-sm">{metrics.byType.map(row => <div className="flex justify-between" key={row.type}><dt>{smartLinkLabels[row.type]}</dt><dd>{row.count}</dd></div>)}</dl>
-      <p className="mt-5 text-sm">Payment page views: {metrics.paymentPageViews} · QR views: {metrics.paymentQrViews}</p><h3 className="mt-3 font-semibold">Views by payment method</h3><dl className="mt-2 space-y-2 text-sm">{metrics.paymentViews.map(row => <div className="flex justify-between" key={row.id}><dt>{row.name}</dt><dd>{row.count}</dd></div>)}</dl><p className="mt-4 text-xs text-slate-500">QR views count viewer opens, not payments. Total QR views include historical and removed methods.</p>
+      <p className="mt-5 text-sm">Payment page views: {metrics.paymentPageViews} · QR views: {metrics.paymentQrViews}</p><h3 className="mt-3 font-semibold">Views by payment method</h3><dl className="mt-2 space-y-2 text-sm">{metrics.paymentViews.map(row => <div className="flex justify-between" key={row.id}><dt>{row.name}</dt><dd>{row.count}</dd></div>)}</dl>
     </section>
     <SmartLinksManager businessId={id} links={links} />
     <PaymentManager businessId={id} methods={methods} />

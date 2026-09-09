@@ -34,7 +34,7 @@ export function AdminShell({
     <div className="min-h-dvh bg-slate-50 text-slate-950 md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="hidden border-r border-slate-200 bg-white md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:p-5">
         <div className="flex items-center gap-3 px-2 py-2">
-          <BrandLogo className="h-10 w-32" />
+          <BrandLogo className="h-9 w-[7.2rem]" />
           <div>
             <p className="text-xs text-slate-500">Admin workspace</p>
           </div>
@@ -79,7 +79,7 @@ export function AdminShell({
         <header className="mobile-app-header sticky top-0 z-20 border-b border-slate-200/70 bg-white/95 px-5 pb-3 shadow-[0_8px_24px_-22px_rgba(15,23,42,0.4)] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-xl items-center justify-between">
             <div className="flex items-center gap-3">
-              <BrandLogo className="h-9 w-28" />
+              <BrandLogo className="h-8 w-[6.4rem]" />
               <div>
                 <p className="text-xs font-medium text-slate-500">Admin workspace</p>
               </div>

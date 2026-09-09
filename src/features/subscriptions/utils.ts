@@ -4,7 +4,7 @@ export const NEPAL_TIME_ZONE = "Asia/Kathmandu";
 
 export type Subscription = Tables<"subscriptions">;
 export type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
-export type ExpiringWindow = "TODAY" | "WITHIN_3_DAYS" | "WITHIN_7_DAYS" | "WITHIN_30_DAYS" | null;
+export type ExpiringWindow = "TODAY" | "WITHIN_7_DAYS" | "WITHIN_15_DAYS" | "WITHIN_30_DAYS" | null;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -33,9 +33,9 @@ export function getSubscriptionTiming(subscription: Subscription | null, now = n
 
   if (!isExpired && ["TRIAL", "ACTIVE"].includes(subscription.status)) {
     if (expiresToday) expiringWindow = "TODAY";
-    else if (daysRemaining <= 3) expiringWindow = "WITHIN_3_DAYS";
-    else if (daysRemaining <= 7) expiringWindow = "WITHIN_7_DAYS";
-    else if (daysRemaining <= 30) expiringWindow = "WITHIN_30_DAYS";
+    else if (remainingMs <= 7 * DAY_MS) expiringWindow = "WITHIN_7_DAYS";
+    else if (remainingMs <= 15 * DAY_MS) expiringWindow = "WITHIN_15_DAYS";
+    else if (remainingMs <= 30 * DAY_MS) expiringWindow = "WITHIN_30_DAYS";
   }
 
   return {
@@ -65,8 +65,8 @@ export function formatNepalDate(value: string | Date) {
 
 export function getExpiringLabel(window: ExpiringWindow) {
   if (window === "TODAY") return "Expires today";
-  if (window === "WITHIN_3_DAYS") return "Expires within 3 days";
   if (window === "WITHIN_7_DAYS") return "Expires within 7 days";
+  if (window === "WITHIN_15_DAYS") return "Expires within 15 days";
   if (window === "WITHIN_30_DAYS") return "Expires within 30 days";
   return null;
 }

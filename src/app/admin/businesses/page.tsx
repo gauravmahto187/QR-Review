@@ -35,8 +35,6 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
           <Plus className="size-5" aria-hidden="true" />Add business
         </Link>
       </div>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Manage profiles, availability, and subscription access.</p>
-
       <form className="mt-6 rounded-[1.5rem] border border-slate-200/90 bg-white p-3.5 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.5)] sm:grid sm:grid-cols-[1fr_12rem_auto] sm:gap-3 sm:p-4" method="get">
         <label className="relative block">
           <span className="sr-only">Search by business name</span>
@@ -86,7 +84,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
         <section className="mt-4 rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm sm:p-12">
           <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-600"><Building2 className="size-7" aria-hidden="true" /></span>
           <h2 className="mt-5 text-lg font-semibold text-slate-950">{search || status ? "No matching businesses" : "No businesses yet"}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{search || status ? "Try changing your search or status filter." : "Create the first profile to begin managing a business."}</p>
+          {search || status ? <p className="mt-2 text-sm text-slate-500">Try another search or filter.</p> : null}
           {hasFilters ? <Link className="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white" href="/admin/businesses">Clear filters</Link> : null}
         </section>
       )}

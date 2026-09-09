@@ -39,7 +39,6 @@ function LinkEditor({ businessId, link, first, last }: { businessId: string; lin
       <fieldset disabled={pending} className="space-y-3 disabled:opacity-60">
         <label className="block text-sm font-medium">Type<select className={field} name="type" value={type} onChange={event => setType(event.target.value as SmartLinkType)}>{SMART_LINK_TYPES.map(type => <option key={type} value={type}>{smartLinkLabels[type]}</option>)}</select></label>
         <label className="block text-sm font-medium">Destination<input className={field} name="url" required maxLength={2048} defaultValue={link?.url ?? ""} placeholder="HTTPS URL, phone number, or email" /></label>
-        <p className="text-xs leading-5 text-slate-500">Social links must use the selected provider’s domain.</p>
         <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="isActive" defaultChecked={link?.is_active ?? true} className="size-5 accent-emerald-700" />Enabled</label>
         <button className="min-h-12 w-full rounded-xl bg-emerald-700 px-4 font-semibold text-white" type="submit">{pending ? "Saving…" : link ? "Save changes" : "Add link"}</button>
       </fieldset>

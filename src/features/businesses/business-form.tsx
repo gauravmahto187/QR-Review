@@ -142,8 +142,7 @@ export function BusinessForm({
             type="url"
             value={googleReviewUrl}
           />
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-xs leading-5 text-slate-500">Paste the Google Maps link for this business.</p>
+          <div className="mt-2 flex items-center justify-end gap-3">
             {testGoogleMapsUrl ? <a className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800" href={testGoogleMapsUrl} rel="noreferrer" target="_blank">Test link<ExternalLink className="size-3.5" /></a> : null}
           </div>
           <FieldError errors={state.fieldErrors?.googleReviewUrl} />
@@ -175,7 +174,6 @@ export function BusinessForm({
             <p className="mt-2 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
               {business?.status.charAt(0)}{business?.status.slice(1).toLowerCase()}
             </p>
-            <p className="mt-2 text-xs leading-5 text-slate-500">Use the confirmed availability actions on the business page to change status.</p>
             <input name="status" type="hidden" value={business?.status} />
           </div>
         )}
@@ -184,7 +182,6 @@ export function BusinessForm({
           <label className="block text-sm font-semibold text-slate-800" htmlFor="logo">
             Business Logo <span className="font-normal text-slate-400">(optional)</span>
           </label>
-          <p className="mt-2 text-xs text-slate-500">Used on the business review page.</p>
           <label
             className="mt-2 flex min-h-28 cursor-pointer items-center gap-4 rounded-2xl border border-dashed border-slate-300 p-4 transition hover:border-emerald-500 hover:bg-emerald-50/40"
             htmlFor="logo"
@@ -219,7 +216,6 @@ export function BusinessForm({
         </div>
         <div className="border-t border-slate-200 pt-5">
           <label className="block text-sm font-semibold text-slate-800" htmlFor="qrLogo">QR Logo (optional)</label>
-          <p className="mt-2 text-xs text-slate-500">Used only inside the QR code.</p>
           <label className="mt-3 flex min-h-11 items-center gap-3 text-sm text-slate-800">
             <input type="checkbox" name="useBusinessLogoForQr" checked={useBusinessLogoForQr} onChange={(event) => setUseBusinessLogoForQr(event.target.checked)} />
             Use Business Logo for QR

@@ -1,11 +1,11 @@
-import { Eye, MousePointerClick, Play, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowRight, Eye, MousePointerClick, Play, RefreshCw, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { analyticsConversions, type AnalyticsEventCounts, type AnalyticsTrendPoint, type RecentActivity } from "@/features/analytics/types";
 import { formatNepalDateTime } from "@/features/subscriptions/utils";
 
-export function MetricCard({ label, value }: { label: string; value: number | string }) {
-  return <article className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{typeof value === "number" ? value.toLocaleString() : value}</p></article>;
+export function MetricCard({ label, value, className, interactive }: { label: string; value: number | string; className?: string; interactive?: boolean }) {
+  return <article className={`relative rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm ${className ?? ""}`}><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">{label}</p><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{typeof value === "number" ? value.toLocaleString() : value}</p>{interactive ? <ArrowRight aria-hidden="true" className="absolute right-4 top-1/2 size-5 -translate-y-1/2 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-amber-600" /> : null}</article>;
 }
 
 export function EventMetricGrid({ events }: { events: AnalyticsEventCounts }) {

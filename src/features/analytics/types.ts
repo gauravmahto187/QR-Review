@@ -29,8 +29,7 @@ export type BusinessAnalytics = {
 
 export type PlatformAnalytics = BusinessAnalytics & {
   businesses: { active: number; archived: number; suspended: number; total: number };
-  subscriptionAlerts: Array<{ business_id: string; business_name: string; expires_at: string; status: string; window: "EXPIRED" | "TODAY" | "WITHIN_3_DAYS" | "WITHIN_7_DAYS" | "WITHIN_30_DAYS" }>;
-  subscriptions: { expired: number; expires_today: number; within_3_days: number; within_7_days: number; within_30_days: number };
+  subscriptions: { expired: number; expires_today: number; within_7_days: number; within_15_days: number; within_30_days: number };
 };
 
 export function analyticsConversions(events: AnalyticsEventCounts) {
