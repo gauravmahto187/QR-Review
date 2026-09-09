@@ -1,8 +1,8 @@
-# Boostup AI Smart QR — Project Context
+# NexGen Digital — Project Context
 
 ## Product
 
-Boostup AI Smart QR is a subscription-based Google Review automation SaaS from Boostup. One central admin manages multiple businesses. Each business receives a permanent URL at `/r/[slug]`, encoded in both QR codes and NFC tags.
+NexGen Digital is a subscription-based Google Review automation SaaS. One central admin manages multiple businesses. Each business receives a permanent URL at `/r/[slug]`, encoded in both QR codes and NFC tags.
 
 An anonymous customer answers multiple-choice questions, selects English or Nepali for the generated review, and receives a concise AI-assisted review grounded only in those answers. The customer may edit it and regenerate once. Continuing copies the review and opens the business's Google Maps link.
 
@@ -72,6 +72,8 @@ Run npm run test:qr-branding for source-priority checks A-H, 36 PNG/SVG decoder 
 Review QR at `/r/[slug]` requires the existing valid Review subscription and active business. Smart Links QR at `/s/[slug]` requires only an existing ACTIVE business. `evaluateSmartLinksAvailability` never reads subscriptions: expired, suspended, cancelled or absent Review subscriptions do not affect Smart Links. Business SUSPENDED or ARCHIVED blocks both systems. Review availability, AI generation and Google handoff remain unchanged.
 
 Active direct types are FACEBOOK, INSTAGRAM, TIKTOK, YOUTUBE and WEBSITE. Validate HTTPS and provider domains server-side; legacy unsupported rows remain stored but are excluded from admin selectors, public resolution and current analytics labels.
+
+Direct links display only their canonical type names (Facebook, Instagram, TikTok, YouTube, Website); the historical label field is retained but unused in the direct-link form and public page. Payment method names remain administrator-defined.
 
 The main Smart Links list shows one Payment navigation item first when active payment methods exist, followed by direct links in their saved order. `/s/[slug]/payments` lists only active methods in payment order. Each opens the existing QR image modal with name and Close/Back. Empty states are shown when no direct links or methods are available. Provider names never appear as separate main-page items.
 

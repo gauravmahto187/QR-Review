@@ -15,7 +15,7 @@ export async function mutateSmartLink(businessId: string, form: FormData): Promi
   if (action.data !== "CREATE" && !z.uuid().safeParse(linkId).success) return { error: "Invalid link." };
   const direction = form.get("direction");
   if (action.data === "MOVE" && direction !== "UP" && direction !== "DOWN") return { error: "Invalid direction." };
-  const parsed = smartLinkSchema.safeParse({ type: form.get("type"), label: form.get("label"), url: form.get("url") ?? "", isActive: form.get("isActive") === "on" });
+  const parsed = smartLinkSchema.safeParse({ type: form.get("type"), url: form.get("url") ?? "", isActive: form.get("isActive") === "on" });
   if ((action.data === "CREATE" || action.data === "UPDATE") && !parsed.success) return { error: parsed.error.issues[0].message };
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.rpc("apply_smart_link_action", {

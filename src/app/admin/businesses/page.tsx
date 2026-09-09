@@ -11,7 +11,7 @@ import { getExpiringLabel, getSubscriptionTiming } from "@/features/subscription
 import { requireAdminPage } from "@/lib/auth/admin";
 import type { Database } from "@/types/database";
 
-export const metadata = { title: "Businesses | Boostup AI Smart QR" };
+export const metadata = { title: "Businesses | NexGen Digital" };
 
 type BusinessStatus = Database["public"]["Enums"]["business_status"];
 

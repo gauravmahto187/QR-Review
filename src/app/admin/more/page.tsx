@@ -4,7 +4,7 @@ import { LogoutButton } from "@/features/auth/logout-button";
 import { requireAdminPage } from "@/lib/auth/admin";
 
 export const metadata = {
-  title: "More | Boostup AI Smart QR",
+  title: "More | NexGen Digital",
 };
 
 export default async function MorePage() {

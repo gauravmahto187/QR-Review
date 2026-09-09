@@ -126,3 +126,4 @@ assert.equal(response.headers.get('cache-control'), 'private, no-store');
 const downloaded = await sharp(Buffer.from(await response.arrayBuffer())).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 assert.equal(jsQR(new Uint8ClampedArray(downloaded.data), downloaded.info.width, downloaded.info.height)?.data, 'https://boostup.example/r/permanent');
 console.log('Passed anonymous download rejection, protected suspended-business download, and ignored arbitrary URL/logo parameters.');
+

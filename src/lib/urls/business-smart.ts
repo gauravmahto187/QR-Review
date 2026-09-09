@@ -7,5 +7,5 @@ export function buildBusinessSmartUrl(slug: string, appPublicUrl: string) {
 }
 
 export function smartQrFilename(slug: string, format: "png" | "svg") {
-  return `boostup-${slug.replace(/[^a-z0-9-]/g, "")}-smart-qr.${format}`;
+  return `nexgen-${slug.replace(/[^a-z0-9-]/g, "")}-smart-qr.${format}`;
 }

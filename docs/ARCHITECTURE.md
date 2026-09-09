@@ -1,4 +1,4 @@
-# Boostup AI Smart QR — Architecture
+# NexGen Digital — Architecture
 
 ## Stack
 
@@ -146,7 +146,7 @@ An explicit Continue records best-effort `GOOGLE_REVIEW_CLICK`, meaning only tha
 
 `buildBusinessReviewUrl()` is the single URL-construction boundary for QR management, business detail links, and future NFC tools. It validates the immutable stored slug, normalizes the configured `NEXT_PUBLIC_APP_URL`, permits only HTTP/HTTPS without credentials, query strings, or fragments, and produces `{base}/r/{slug}` with no tracking, subscription, customer, or secret data.
 
-The lightweight `qrcode` encoder generates standard black-on-white codes with high (`H`) error correction and a four-module quiet zone. Admin preview uses server-generated SVG. Protected download handlers provide a 1600px PNG for common print use and SVG for lossless professional scaling with stable `boostup-{slug}-qr` filenames.
+The lightweight `qrcode` encoder generates standard black-on-white codes with high (`H`) error correction and a four-module quiet zone. Admin preview uses server-generated SVG. Protected download handlers provide a 1600px PNG for common print use and SVG for lossless professional scaling with stable `nexgen-{slug}-qr` filenames.
 
 `/admin/businesses/[id]/qr` and its download handler require admin authorization and resolve the business server-side. They accept only business ID and a `png`/`svg` format; no client-supplied URL can be encoded. Missing businesses, invalid identifiers/configuration, and generation errors receive safe states.
 
@@ -185,6 +185,8 @@ The logo is contained within 14% of QR width, plus 1% white padding per side. PN
 Review QR at `/r/[slug]` requires the existing valid Review subscription and active business. Smart Links QR at `/s/[slug]` requires only an existing ACTIVE business. `evaluateSmartLinksAvailability` never reads subscriptions: expired, suspended, cancelled or absent Review subscriptions do not affect Smart Links. Business SUSPENDED or ARCHIVED blocks both systems. Review availability, AI generation and Google handoff remain unchanged.
 
 Active direct types are FACEBOOK, INSTAGRAM, TIKTOK, YOUTUBE and WEBSITE. Validate HTTPS and provider domains server-side; legacy unsupported rows remain stored but are excluded from admin selectors, public resolution and current analytics labels.
+
+Public direct-link names always come from the centralized `smartLinkLabels` type mapping. The legacy Smart Link `label` column is optional compatibility data: it is neither collected in the normal-link admin form nor rendered publicly. Payment method names remain administrator-defined.
 
 The main Smart Links list shows one Payment navigation item first when active payment methods exist, followed by direct links in their saved order. `/s/[slug]/payments` lists only active methods in payment order. Each opens the existing QR image modal with name and Close/Back. Empty states are shown when no direct links or methods are available. Provider names never appear as separate main-page items.
 

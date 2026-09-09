@@ -5,7 +5,7 @@ import { getAnalyticsDateRange } from "@/features/analytics/date-range";
 import { DateRangeFilter } from "@/features/analytics/date-range-filter";
 import { getPlatformAnalytics } from "@/features/analytics/queries";
 
-export const metadata = { title: "Activity | Boostup AI Smart QR" };
+export const metadata = { title: "Activity | NexGen Digital" };
 
 export default async function ActivityPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const range = getAnalyticsDateRange(await searchParams);

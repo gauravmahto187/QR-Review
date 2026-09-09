@@ -1,12 +1,12 @@
-import { ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
 
 import { logoutAction } from "@/features/auth/actions";
 import { LoginForm } from "@/features/auth/login-form";
 import { getAdminAuthState } from "@/lib/auth/admin";
 
 export const metadata = {
-  title: "Admin sign in | Boostup AI Smart QR",
+  title: "Admin sign in | NexGen Digital",
 };
 
 export default async function LoginPage() {
@@ -20,13 +20,7 @@ export default async function LoginPage() {
     <main className="min-h-dvh bg-slate-50 px-5 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md items-center sm:min-h-[calc(100dvh-6rem)]">
         <section className="w-full rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-8">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-            <ShieldCheck className="size-6" aria-hidden="true" />
-          </div>
-
-          <p className="mt-6 text-sm font-semibold text-emerald-700">
-            Boostup AI Smart QR
-          </p>
+          <BrandLogo className="h-14 w-48" priority />
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
             Welcome back
           </h1>

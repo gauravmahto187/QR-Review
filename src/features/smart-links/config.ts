@@ -33,7 +33,7 @@ export function normalizeSmartLink(type: string, input: string): string | null {
 }
 
 export const smartLinkSchema = z.object({
-  type: z.enum(SMART_LINK_TYPES), label: z.string().trim().max(60),
+  type: z.enum(SMART_LINK_TYPES), label: z.string().trim().max(60).optional().default(""),
   url: z.string().trim().max(2048), isActive: z.boolean(),
 }).superRefine((link, ctx) => {
   if (!normalizeSmartLink(link.type, link.url)) ctx.addIssue({ code: "custom", path: ["url"], message: "Enter a valid destination for this link type. Use HTTPS and the selected provider’s official domain." });

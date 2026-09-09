@@ -131,7 +131,7 @@ for (const slug of ['cafe', 'a'.repeat(80)]) {
     }
   }
 }
-assert.equal(smartQrFilename('cafe', 'png'), 'boostup-cafe-smart-qr.png');
+assert.equal(smartQrFilename('cafe', 'png'), 'nexgen-cafe-smart-qr.png');
 let qrAdmin = false;
 const download = load('src/app/api/admin/businesses/[id]/smart-qr/route.ts', {
   '@/lib/auth/admin': { getAdminAuthState: async () => ({ admin: qrAdmin ? {} : null }) },
@@ -142,7 +142,8 @@ const qrParams = { params: Promise.resolve({ id: businessId }) };
 assert.equal((await download.GET(new Request('https://boostup.example/api/qr'), qrParams)).status, 401);
 qrAdmin = true;
 const qrResponse = await download.GET(new Request('https://boostup.example/api/qr?url=https://evil.example&format=png'), qrParams);
-assert.equal(qrResponse.headers.get('content-disposition'), 'attachment; filename="boostup-cafe-smart-qr.png"');
+assert.equal(qrResponse.headers.get('content-disposition'), 'attachment; filename="nexgen-cafe-smart-qr.png"');
 const qrRaw = await sharp(Buffer.from(await qrResponse.arrayBuffer())).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 assert.equal(jsQR(new Uint8ClampedArray(qrRaw.data), qrRaw.info.width, qrRaw.info.height)?.data, 'https://boostup.example/s/cafe');
 console.log(`Passed 5 supported types, retired-type rejection, independent Smart/Review availability, unsafe destination rejection, real service availability/filtering, route injection/analytics/rate-limit checks, admin validation/auth, ${scans + 1} QR decodes. Database operations use doubles; apply migration and verify RLS/atomic ordering on PostgreSQL separately.`);
+

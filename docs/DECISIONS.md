@@ -1,10 +1,10 @@
-# Boostup AI Smart QR — Product and Architecture Decisions
+# NexGen Digital — Product and Architecture Decisions
 
 This is the V1 decision log. Changes should be recorded here before architecture or implementation drifts.
 
 ## Product decisions
 
-1. The brand name is **Boostup**, the product name is **AI Smart QR**, and the full product name is **Boostup AI Smart QR**.
+1. The public brand name is **NexGen Digital**. Existing technical product identifiers remain unchanged for compatibility.
 2. V1 has one central admin; the schema may support multiple admins later, but there is no multi-admin UI.
 3. Business statuses are `ACTIVE`, `SUSPENDED`, and `ARCHIVED`.
 4. Subscription statuses are `TRIAL`, `ACTIVE`, `EXPIRED`, `SUSPENDED`, and `CANCELLED`.
@@ -84,7 +84,7 @@ This is the V1 decision log. Changes should be recorded here before architecture
 74. An expired session cookie produces a friendly restart state. A finalized review restores after refresh only while its anonymous session remains valid.
 75. Every business QR encodes only the permanent URL produced from `NEXT_PUBLIC_APP_URL` and the stored immutable slug: `/r/[slug]`.
 76. QR generation uses the lightweight `qrcode` package with high error correction, a four-module quiet zone, black modules, and a white background. Decorative overlays are excluded for scan reliability.
-77. QR assets are derived on demand rather than stored. Admins receive a 1600px PNG and vector SVG named `boostup-{slug}-qr`.
+77. QR assets are derived on demand rather than stored. Admins receive a 1600px PNG and vector SVG named `nexgen-{slug}-qr`.
 78. Admin QR preview and downloads require server-side admin authorization and business lookup. The endpoint accepts no arbitrary URL or redirect input.
 79. Business display name, status, subscription, questions, and AI behavior do not change QR identity. Expiry/suspension shows the existing public unavailable state; renewal restores access through the same print.
 80. NFC requires no separate route or token in V1 and will encode the same permanent URL returned by the shared helper.
@@ -119,6 +119,8 @@ The image occupies 14% of the width with white padding (16% total footprint). H 
 Review QR at `/r/[slug]` requires the existing valid Review subscription and active business. Smart Links QR at `/s/[slug]` requires only an existing ACTIVE business. `evaluateSmartLinksAvailability` never reads subscriptions: expired, suspended, cancelled or absent Review subscriptions do not affect Smart Links. Business SUSPENDED or ARCHIVED blocks both systems. Review availability, AI generation and Google handoff remain unchanged.
 
 Active direct types are FACEBOOK, INSTAGRAM, TIKTOK, YOUTUBE and WEBSITE. Validate HTTPS and provider domains server-side; legacy unsupported rows remain stored but are excluded from admin selectors, public resolution and current analytics labels.
+
+Direct Smart Link labels are canonical platform names from one shared type mapping. Admin-entered legacy labels remain stored but are not requested or shown. Payment method names remain custom because they identify administrator-configured payment QR images.
 
 The main Smart Links list shows one Payment navigation item first when active payment methods exist, followed by direct links in their saved order. `/s/[slug]/payments` lists only active methods in payment order. Each opens the existing QR image modal with name and Close/Back. Empty states are shown when no direct links or methods are available. Provider names never appear as separate main-page items.
 

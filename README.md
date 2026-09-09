@@ -1,4 +1,4 @@
-# Boostup AI Smart QR
+# NexGen Digital
 
 Mobile-first Google Review automation SaaS for centrally managed businesses. The application includes admin authentication, business and subscription management, question configuration, anonymous review generation, customer-controlled Google handoff, permanent QR assets, and server-aggregated analytics.
 

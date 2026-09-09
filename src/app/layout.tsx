@@ -4,13 +4,14 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Boostup AI Smart QR",
+  title: "NexGen Digital",
   description: "A mobile-first Google Review automation platform for businesses.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Boostup",
+    title: "NexGen Digital",
   },
+  icons: { icon: "/nexgen-digital-logo.png" },
 };
 
 export const viewport: Viewport = {

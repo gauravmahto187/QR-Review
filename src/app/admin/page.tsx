@@ -7,7 +7,7 @@ import { DateRangeFilter } from "@/features/analytics/date-range-filter";
 import { getPlatformAnalytics } from "@/features/analytics/queries";
 import { formatNepalDate } from "@/features/subscriptions/utils";
 
-export const metadata = { title: "Analytics | Boostup AI Smart QR" };
+export const metadata = { title: "Analytics | NexGen Digital" };
 
 function alertLabel(window: string) {
   if (window === "EXPIRED") return "Expired";
