@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Tables } from "@/types/database";
 import { mutatePaymentQr } from "./payment-actions";
+import { PaymentProviderLogo } from "./provider-logo";
 
 const field = "mt-1 min-h-12 w-full rounded-xl border border-slate-300 px-3 text-sm";
 const button = "min-h-11 rounded-xl border border-slate-300 px-3 text-sm font-semibold disabled:opacity-40";
@@ -26,7 +27,7 @@ function PaymentEditor({ businessId, method, first, last }: { businessId: string
     submit(form);
   }
   return <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-    <h3 className="flex items-center justify-between gap-3 font-semibold"><span>{method?.name ?? "Add Payment Method"}</span>{method && <span className="text-xs text-slate-500">{method.is_active ? "Enabled" : "Disabled"}</span>}</h3>
+    <h3 className="flex items-center justify-between gap-3 font-semibold"><span className="flex min-w-0 items-center gap-2"><PaymentProviderLogo name={method?.name ?? "Payment"} className="size-8" /><span className="truncate">{method?.name ?? "Add Payment Method"}</span></span>{method && <span className="text-xs text-slate-500">{method.is_active ? "Enabled" : "Disabled"}</span>}</h3>
     {method && <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`/api/admin/businesses/${businessId}/payment-qr/${method.id}?v=${encodeURIComponent(method.updated_at)}`} alt={`${method.name} QR`} className="mx-auto mt-3 h-auto max-h-80 max-w-full object-contain p-3" />

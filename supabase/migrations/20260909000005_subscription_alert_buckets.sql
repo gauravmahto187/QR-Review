@@ -111,12 +111,78 @@ as $$
   select business_id, business_name, expires_at, status
   from classified
   where bucket = p_bucket
-  order by expires_at, business_name;
+  order by expires_at, business_id;
+$$;
+
+create or replace function public.get_subscription_alerts_page(p_bucket text, p_page integer, p_page_size integer)
+returns jsonb
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $$
+declare
+  v_result jsonb;
+begin
+  if not (select public.is_admin()) then
+    raise exception using errcode = '42501', message = 'ADMIN_REQUIRED';
+  end if;
+  if p_page < 1 or p_page_size < 1 or p_page_size > 100 then
+    raise exception using errcode = '22023', message = 'INVALID_PAGE';
+  end if;
+
+  with classified as (
+    select
+      s.business_id,
+      b.name as business_name,
+      s.expires_at,
+      s.status,
+      case
+        when s.status = 'EXPIRED' or s.expires_at <= now() then 'expired'
+        when s.status in ('TRIAL', 'ACTIVE')
+          and s.expires_at > now()
+          and (s.expires_at at time zone 'Asia/Kathmandu')::date = (now() at time zone 'Asia/Kathmandu')::date then 'today'
+        when s.status in ('TRIAL', 'ACTIVE')
+          and s.expires_at > now()
+          and (s.expires_at at time zone 'Asia/Kathmandu')::date > (now() at time zone 'Asia/Kathmandu')::date
+          and s.expires_at <= now() + interval '7 days' then '7-days'
+        when s.status in ('TRIAL', 'ACTIVE')
+          and s.expires_at > now() + interval '7 days'
+          and (s.expires_at at time zone 'Asia/Kathmandu')::date > (now() at time zone 'Asia/Kathmandu')::date
+          and s.expires_at <= now() + interval '15 days' then '15-days'
+        when s.status in ('TRIAL', 'ACTIVE')
+          and s.expires_at > now() + interval '15 days'
+          and (s.expires_at at time zone 'Asia/Kathmandu')::date > (now() at time zone 'Asia/Kathmandu')::date
+          and s.expires_at <= now() + interval '30 days' then '30-days'
+        else null
+      end as bucket
+    from public.subscriptions s
+    join public.businesses b on b.id = s.business_id
+    where s.is_current
+  ), matched as (
+    select business_id, business_name, expires_at, status
+    from classified
+    where bucket = p_bucket
+  )
+  select jsonb_build_object(
+    'total', (select count(*)::int from matched),
+    'items', coalesce((select jsonb_agg(to_jsonb(page) order by page.expires_at, page.business_id) from (
+      select * from matched
+      order by expires_at, business_id
+      offset (p_page - 1) * p_page_size
+      limit p_page_size
+    ) page), '[]'::jsonb)
+  ) into v_result;
+
+  return v_result;
+end;
 $$;
 
 revoke all on function public.get_platform_analytics_legacy(timestamptz, timestamptz) from public;
 revoke all on function public.get_platform_analytics(timestamptz, timestamptz) from public;
 revoke all on function public.get_subscription_alerts(text) from public;
+revoke all on function public.get_subscription_alerts_page(text, integer, integer) from public;
 grant execute on function public.get_platform_analytics_legacy(timestamptz, timestamptz) to authenticated, service_role;
 grant execute on function public.get_platform_analytics(timestamptz, timestamptz) to authenticated, service_role;
 grant execute on function public.get_subscription_alerts(text) to authenticated, service_role;
+grant execute on function public.get_subscription_alerts_page(text, integer, integer) to authenticated, service_role;

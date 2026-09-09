@@ -1,18 +1,28 @@
 import { ArrowLeft, CalendarDays, Clock3, History } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { SubscriptionActions } from "@/features/subscriptions/subscription-actions";
 import { SubscriptionStatusBadge } from "@/features/subscriptions/subscription-status-badge";
 import { getSubscriptionManagementData } from "@/features/subscriptions/queries";
 import { formatNepalDateTime, getExpiringLabel, getSubscriptionTiming } from "@/features/subscriptions/utils";
 import { requireAdminPage } from "@/lib/auth/admin";
+import { PaginationControls } from "@/components/admin/pagination-controls";
 
-export default async function SubscriptionPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SubscriptionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
   await requireAdminPage();
   const { id } = await params;
-  const data = await getSubscriptionManagementData(id);
+  const requestedPage = Number.parseInt((await searchParams).page ?? "1", 10);
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const data = await getSubscriptionManagementData(id, page, 10);
   if (!data) notFound();
+  const resolvedData = data;
+  const pageCount = Math.max(1, Math.ceil(resolvedData.historyTotal / 10));
+  if (page > pageCount) redirect(`/admin/businesses/${resolvedData.business.id}/subscription?page=${pageCount}`);
+
+  function pageHref(nextPage: number) {
+    return `/admin/businesses/${resolvedData.business.id}/subscription?page=${nextPage}`;
+  }
   const timing = getSubscriptionTiming(data.current);
   const expiringLabel = getExpiringLabel(timing.expiringWindow);
 
@@ -30,6 +40,7 @@ export default async function SubscriptionPage({ params }: { params: Promise<{ i
 
     <section className="mt-5"><div className="flex items-center gap-2"><History className="size-5 text-slate-500" /><h2 className="text-lg font-semibold text-slate-950">Subscription history</h2></div>
       {data.history.length ? <div className="mt-4 space-y-3">{data.history.map((subscription) => { const itemTiming = getSubscriptionTiming(subscription); return <article className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm" key={subscription.id}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-slate-950">{subscription.plan}</p><p className="mt-1 text-xs text-slate-500">Created {formatNepalDateTime(subscription.created_at)}</p></div><div className="flex flex-col items-end gap-2"><SubscriptionStatusBadge subscription={subscription} />{subscription.is_current ? <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-emerald-700">Current</span> : null}</div></div><dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><div><dt className="text-xs text-slate-400">Started</dt><dd className="mt-1 text-slate-700">{formatNepalDateTime(subscription.starts_at)}</dd></div><div><dt className="text-xs text-slate-400">Expires</dt><dd className="mt-1 text-slate-700">{formatNepalDateTime(subscription.expires_at)}</dd></div>{subscription.suspended_at ? <div><dt className="text-xs text-slate-400">Suspended</dt><dd className="mt-1 text-slate-700">{formatNepalDateTime(subscription.suspended_at)}</dd></div> : null}{subscription.cancelled_at ? <div><dt className="text-xs text-slate-400">Cancelled</dt><dd className="mt-1 text-slate-700">{formatNepalDateTime(subscription.cancelled_at)}</dd></div> : null}</dl>{itemTiming.isExpired && subscription.status !== "EXPIRED" ? <p className="mt-3 text-xs text-rose-600">Effectively expired from its UTC expiry, regardless of stored status.</p> : null}</article>; })}</div> : <div className="mt-4 rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">No subscription history yet.</div>}
+      <PaginationControls page={page} pageCount={pageCount} hrefForPage={pageHref} />
     </section>
   </div>;
 }

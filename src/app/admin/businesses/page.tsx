@@ -1,11 +1,13 @@
 import { ArrowRight, Building2, CalendarClock, Plus, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { BusinessLogo } from "@/features/businesses/business-logo";
 import { BUSINESS_STATUSES } from "@/features/businesses/constants";
 import { listBusinesses } from "@/features/businesses/queries";
 import { getBusinessLogoUrl } from "@/features/businesses/storage";
 import { BusinessStatusBadge } from "@/features/businesses/status-badge";
+import { PaginationControls } from "@/components/admin/pagination-controls";
 import { SubscriptionStatusBadge } from "@/features/subscriptions/subscription-status-badge";
 import { getExpiringLabel, getSubscriptionTiming } from "@/features/subscriptions/utils";
 import { requireAdminPage } from "@/lib/auth/admin";
@@ -15,14 +17,32 @@ export const metadata = { title: "Businesses | NexGen Digital" };
 
 type BusinessStatus = Database["public"]["Enums"]["business_status"];
 
-export default async function BusinessesPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+export default async function BusinessesPage({ searchParams }: { searchParams: Promise<{ q?: string; search?: string; status?: string; page?: string }> }) {
   await requireAdminPage();
   const params = await searchParams;
-  const search = params.q?.trim() ?? "";
+  const search = (params.q ?? params.search ?? "").trim();
   const status = BUSINESS_STATUSES.includes(params.status as BusinessStatus) ? (params.status as BusinessStatus) : undefined;
-  const { businesses, subscriptions, supabase } = await listBusinesses({ search, status });
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const { businesses, subscriptions, supabase, totalCount } = await listBusinesses({ search, status, page, pageSize: 10 });
+  const pageCount = Math.max(1, Math.ceil(totalCount / 10));
+  if (page > pageCount) {
+    const query = new URLSearchParams();
+    if (search) query.set("q", search);
+    if (status) query.set("status", status);
+    if (pageCount > 1) query.set("page", String(pageCount));
+    redirect(`/admin/businesses${query.toString() ? `?${query.toString()}` : ""}`);
+  }
   const hasFilters = Boolean(search || status);
-  const resultLabel = `${businesses.length} ${businesses.length === 1 ? "business" : "businesses"}`;
+  const resultLabel = `${totalCount} ${totalCount === 1 ? "business" : "businesses"}`;
+
+  function pageHref(nextPage: number) {
+    const query = new URLSearchParams();
+    if (search) query.set("q", search);
+    if (status) query.set("status", status);
+    query.set("page", String(nextPage));
+    return `/admin/businesses?${query.toString()}`;
+  }
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -36,6 +56,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
         </Link>
       </div>
       <form className="mt-6 rounded-[1.5rem] border border-slate-200/90 bg-white p-3.5 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.5)] sm:grid sm:grid-cols-[1fr_12rem_auto] sm:gap-3 sm:p-4" method="get">
+        <input name="page" type="hidden" value="1" />
         <label className="relative block">
           <span className="sr-only">Search by business name</span>
           <Search className="pointer-events-none absolute left-4 top-3.5 size-5 text-slate-400" aria-hidden="true" />
@@ -88,6 +109,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
           {hasFilters ? <Link className="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white" href="/admin/businesses">Clear filters</Link> : null}
         </section>
       )}
+      <PaginationControls page={page} pageCount={pageCount} hrefForPage={pageHref} />
     </div>
   );
 }

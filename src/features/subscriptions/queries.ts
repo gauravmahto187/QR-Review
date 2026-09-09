@@ -1,27 +1,32 @@
 import "server-only";
 
+import { z } from "zod";
 import type { SubscriptionAlertBucket } from "@/features/subscriptions/alert-buckets";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { evaluateBusinessAvailability } from "@/server/services/business-availability";
-import { getSubscriptionTiming } from "@/features/subscriptions/utils";
 
-export async function getSubscriptionManagementData(businessId: string) {
+const subscriptionAlertSchema = z.object({ business_id: z.string(), business_name: z.string(), expires_at: z.string(), status: z.string() });
+const subscriptionAlertPageSchema = z.object({ total: z.number(), items: z.array(subscriptionAlertSchema) });
+
+export async function getSubscriptionManagementData(businessId: string, page = 1, pageSize = 10) {
   const supabase = await createServerSupabaseClient();
-  const [{ data: business, error: businessError }, { data: subscriptions, error: subscriptionsError }] = await Promise.all([
+  const [{ data: business, error: businessError }, { data: currentRows, error: currentError }, { data: subscriptions, error: subscriptionsError, count: historyTotal }] = await Promise.all([
     supabase.from("businesses").select("*").eq("id", businessId).maybeSingle(),
-    supabase.from("subscriptions").select("*").eq("business_id", businessId).order("created_at", { ascending: false }),
+    supabase.from("subscriptions").select("*").eq("business_id", businessId).eq("is_current", true).maybeSingle(),
+    supabase.from("subscriptions").select("*", { count: "exact" }).eq("business_id", businessId).order("created_at", { ascending: false }).order("id", { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1),
   ]);
 
-  if (businessError || subscriptionsError) throw new Error("Unable to load subscription management.");
+  if (businessError || currentError || subscriptionsError) throw new Error("Unable to load subscription management.");
   if (!business) return null;
-  const current = subscriptions?.find((subscription) => subscription.is_current) ?? null;
+  const current = currentRows ?? null;
 
   return {
     availability: evaluateBusinessAvailability(business.status, current),
     business,
     current,
     history: subscriptions ?? [],
+    historyTotal: historyTotal ?? 0,
   };
 }
 
@@ -37,30 +42,19 @@ export async function getCurrentSubscriptionsByBusinessIds(businessIds: string[]
   return new Map((data ?? []).map((subscription) => [subscription.business_id, subscription]));
 }
 
-export async function getSubscriptionAlerts(bucket: SubscriptionAlertBucket) {
+export async function getSubscriptionAlerts(bucket: SubscriptionAlertBucket, page = 1, pageSize = 10) {
   await requireAdmin();
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.rpc("get_subscription_alerts", { p_bucket: bucket });
-  if (!error) return data ?? [];
+  const { data, error } = await supabase.rpc("get_subscription_alerts_page", { p_bucket: bucket, p_page: page, p_page_size: pageSize });
+  if (!error) {
+    const parsed = subscriptionAlertPageSchema.safeParse(data);
+    if (!parsed.success) throw new Error("Subscription alerts returned an invalid response.");
+    return parsed.data;
+  }
 
-  const [{ data: subscriptions, error: subscriptionsError }, { data: businesses, error: businessesError }] = await Promise.all([
-    supabase.from("subscriptions").select("*").eq("is_current", true),
-    supabase.from("businesses").select("id, name"),
-  ]);
-  if (subscriptionsError || businessesError) throw new Error("Unable to load subscription alerts.");
-  const businessNames = new Map((businesses ?? []).map((business) => [business.id, business.name]));
-  const now = new Date();
-  return (subscriptions ?? []).filter((subscription) => {
-    const timing = getSubscriptionTiming(subscription, now);
-    if (bucket === "expired") return timing.isExpired;
-    if (bucket === "today") return timing.expiringWindow === "TODAY";
-    if (bucket === "7-days") return timing.expiringWindow === "WITHIN_7_DAYS";
-    if (bucket === "15-days") return timing.expiringWindow === "WITHIN_15_DAYS";
-    return timing.expiringWindow === "WITHIN_30_DAYS";
-  }).map((subscription) => ({
-    business_id: subscription.business_id,
-    business_name: businessNames.get(subscription.business_id) ?? "Business",
-    expires_at: subscription.expires_at,
-    status: subscription.status,
-  })).sort((a, b) => a.expires_at.localeCompare(b.expires_at));
+  const { data: legacyData, error: legacyError } = await supabase.rpc("get_subscription_alerts", { p_bucket: bucket }).range((page - 1) * pageSize, page * pageSize - 1);
+  if (legacyError) throw new Error("Unable to load subscription alerts.");
+  const items = legacyData ?? [];
+  const total = items.length === pageSize ? page * pageSize + 1 : (page - 1) * pageSize + items.length;
+  return { items, total };
 }

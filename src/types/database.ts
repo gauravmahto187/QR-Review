@@ -482,6 +482,10 @@ export type Database = {
         Args: { p_bucket: string };
         Returns: Array<{ business_id: string; business_name: string; expires_at: string; status: Database["public"]["Enums"]["subscription_status"] }>;
       };
+      get_subscription_alerts_page: {
+        Args: { p_bucket: string; p_page: number; p_page_size: number };
+        Returns: Json;
+      };
       is_admin: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
